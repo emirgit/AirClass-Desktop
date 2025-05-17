@@ -1,0 +1,15 @@
+release/attendancemanager.o
+release/gestureprocessor.o
+release/main.o
+release/mainwindow.o
+release/presentationmanager.o
+release/student.o
+release/uicontroller.o
+release/websocketclient.o
+release/qrc_qmake_qmake_qm_files.o
+release/moc_attendancemanager.o
+release/moc_gestureprocessor.o
+release/moc_mainwindow.o
+release/moc_presentationmanager.o
+release/moc_uicontroller.o
+release/moc_websocketclient.o
