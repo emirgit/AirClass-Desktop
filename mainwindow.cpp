@@ -17,6 +17,9 @@
 #include <QLabel>
 #include <QIcon>
 #include <QHBoxLayout>
+#include <QTextStream>
+#include <QFile>
+#include "testdata.h"
 
 // Include UI header in implementation file, not in header
 #include "ui_mainwindow.h"
@@ -198,6 +201,121 @@ MainWindow::MainWindow(QWidget *parent)
     homeLayoutQR->addWidget(homeButtonQR);
     homeLayoutQR->addStretch();
     ui->qrCodeLayout->insertLayout(0, homeLayoutQR);
+
+    // Add download attendance button to Students view
+    QPushButton *downloadAttendanceButton = new QPushButton(ui->attendanceGroupBox);
+    downloadAttendanceButton->setIcon(QIcon::fromTheme("document-save", QIcon(":/icons/download.png")));
+    downloadAttendanceButton->setText("Download Attendance");
+    downloadAttendanceButton->setStyleSheet(R"(
+        QPushButton {
+            padding: 8px 16px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        QPushButton:hover {
+            background-color: #5a6268;
+        }
+        QPushButton:pressed {
+            background-color: #545b62;
+        }
+    )");
+    connect(downloadAttendanceButton, &QPushButton::clicked, this, [this]() {
+        // Get test attendance data from TestData class
+        QStringList testData = TestData::getTestAttendanceData();
+
+        // Get save file path
+        QString fileName = QFileDialog::getSaveFileName(this,
+            "Save Attendance Report", "",
+            "CSV Files (*.csv);;All Files (*)");
+
+        if (fileName.isEmpty())
+            return;
+
+        // Add .csv extension if not present
+        if (!fileName.endsWith(".csv", Qt::CaseInsensitive))
+            fileName += ".csv";
+
+        // Save to file
+        QFile file(fileName);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream stream(&file);
+            for (const QString &line : testData) {
+                stream << line << "\n";
+            }
+            file.close();
+            QMessageBox::information(this, "Success", "Attendance report has been saved successfully!");
+        } else {
+            QMessageBox::warning(this, "Error", "Could not save the attendance report!");
+        }
+    });
+
+    // Add the button to the attendance group box layout
+    QVBoxLayout *attendanceLayout = qobject_cast<QVBoxLayout*>(ui->attendanceGroupBox->layout());
+    if (attendanceLayout) {
+        attendanceLayout->addWidget(downloadAttendanceButton);
+    }
+
+    // Add test data to the student list from TestData class
+    QStringList testStudents = TestData::getTestStudents();
+    for (const QString &student : testStudents) {
+        ui->studentListWidget->addItem(student);
+    }
+
+    // Add test speak requests
+    QStringList testRequests = TestData::getTestSpeakRequests();
+    for (const QString &request : testRequests) {
+        QStringList parts = request.split(',');
+        if (parts.size() >= 3) {
+            QString studentId = parts[0];
+            QString studentName = parts[1];
+            QString message = parts[2];
+            
+            QListWidgetItem *item = new QListWidgetItem(
+                QString("%1: %2").arg(studentName, message)
+            );
+            item->setData(Qt::UserRole, studentId);
+            ui->requestListWidget->addItem(item);
+        }
+    }
+
+    // Update approve/reject button connections
+    if (ui->approveButton && ui->requestListWidget) {
+        connect(ui->approveButton, &QPushButton::clicked, [this]() {
+            QListWidgetItem *currentItem = ui->requestListWidget->currentItem();
+            if (currentItem) {
+                QString studentId = currentItem->data(Qt::UserRole).toString();
+                QString studentName = currentItem->text().split(':')[0];
+                
+                // Remove from request list
+                delete ui->requestListWidget->takeItem(ui->requestListWidget->row(currentItem));
+                
+                // Show approval message
+                QMessageBox::information(this, "Approved", 
+                    QString("Speak request approved for %1").arg(studentName));
+            }
+        });
+    }
+
+    if (ui->rejectButton && ui->requestListWidget) {
+        connect(ui->rejectButton, &QPushButton::clicked, [this]() {
+            QListWidgetItem *currentItem = ui->requestListWidget->currentItem();
+            if (currentItem) {
+                QString studentId = currentItem->data(Qt::UserRole).toString();
+                QString studentName = currentItem->text().split(':')[0];
+                
+                // Remove from request list
+                delete ui->requestListWidget->takeItem(ui->requestListWidget->row(currentItem));
+                
+                // Show rejection message
+                QMessageBox::information(this, "Rejected", 
+                    QString("Speak request rejected for %1").arg(studentName));
+            }
+        });
+    }
 }
 
 MainWindow::~MainWindow()
