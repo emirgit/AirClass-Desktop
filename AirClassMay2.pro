@@ -1,12 +1,18 @@
-QT       += core gui printsupport widgets pdf pdfwidgets websockets
+QT       += core gui printsupport widgets pdf pdfwidgets websockets network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 # Add websockets module with version check
 greaterThan(QT_MAJOR_VERSION, 4): QT += websockets
 
+# Add Qt include paths
+INCLUDEPATH += $$[QT_INSTALL_HEADERS]
+INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtCore
+INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtGui
+INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtWidgets
 INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtWebSockets
 DEPENDPATH += $$[QT_INSTALL_HEADERS]/QtWebSockets
-CONFIG += c++17
+
+CONFIG += c++17 c++11
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -20,7 +26,8 @@ SOURCES += \
     presentationmanager.cpp \
     student.cpp \
     uicontroller.cpp \
-    websocketclient.cpp
+    websocketclient.cpp \
+    logindialog.cpp
 
 HEADERS += \
     attendancemanager.h \
@@ -30,14 +37,16 @@ HEADERS += \
     student.h \
     ui_mainwindow.h \
     uicontroller.h \
-    websocketclient.h
+    websocketclient.h \
+    logindialog.h
 
 FORMS += \
     mainwindow.ui
 
 
 TRANSLATIONS += \
-    AirClassMay2_en_US.ts
+    AirClassMay2_en_US.ts \
+    AirClassMay2_tr_TR.ts
 
 CONFIG += lrelease
 CONFIG += embed_translations

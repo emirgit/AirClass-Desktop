@@ -42,6 +42,9 @@ private slots:
     void on_prevButton_clicked();
     void on_zoomInButton_clicked();
     void on_zoomOutButton_clicked();
+    void on_saveImageButton_clicked();
+    void on_printButton_clicked();
+    void on_displayFullScreenButton_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -50,6 +53,11 @@ private:
     AttendanceManager *m_attendanceManager;
     GestureProcessor *m_gestureProcessor;
     UIController *m_uiController;
+
+    // Recent presentations
+    QStringList m_recentPresentations;
+    void addRecentPresentation(const QString &filePath);
+    void showFullScreen();
 
     // Message handlers
     void handleSlideCommand(const QJsonObject &data);

@@ -8,9 +8,19 @@
 #include <QStandardPaths>
 #include <QFileInfo>
 #include <QProcess>
+#include <QTimer>
+#include <QPushButton>
+#include <QPrinter>
+#include <QPrintDialog>
+#include <QPainter>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QIcon>
+#include <QHBoxLayout>
 
 // Include UI header in implementation file, not in header
 #include "ui_mainwindow.h"
+#include "logindialog.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -18,6 +28,72 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this); // Set up the UI
 
+    // Hide all menus initially
+    ui->menuFile->menuAction()->setVisible(false);
+    ui->menuConnection->menuAction()->setVisible(false);
+    ui->menuView->menuAction()->setVisible(false);
+
+    // Show dashboard by default after login
+    if (ui->stackedWidget && ui->dashboardView)
+        ui->stackedWidget->setCurrentWidget(ui->dashboardView);
+
+    // Add Log out button to topBar if not already present
+    QPushButton *logoutButton = new QPushButton("Log out", ui->topBar);
+    logoutButton->setObjectName("logoutButton");
+    logoutButton->setStyleSheet("QPushButton { color: #e74c3c; font-weight: bold; background: transparent; border: 1px solid #e74c3c; border-radius: 6px; padding: 6px 16px; } QPushButton:hover { background: #fbeee6; }");
+    logoutButton->setVisible(false); // Initially hidden
+    ui->horizontalLayout->addWidget(logoutButton);
+    connect(logoutButton, &QPushButton::clicked, this, [this, logoutButton]() {
+        // Hide all menus
+        ui->menuFile->menuAction()->setVisible(false);
+        ui->menuConnection->menuAction()->setVisible(false);
+        ui->menuView->menuAction()->setVisible(false);
+        logoutButton->setVisible(false);
+
+        // Create and show login dialog first
+        LoginDialog loginDialog;
+        loginDialog.show();
+        
+        // Then hide main window
+        this->hide();
+        
+        if (loginDialog.exec() == QDialog::Accepted) {
+            // On successful login, show all menus
+            ui->menuFile->menuAction()->setVisible(true);
+            ui->menuConnection->menuAction()->setVisible(true);
+            ui->menuView->menuAction()->setVisible(true);
+            logoutButton->setVisible(true);
+
+            // Show dashboard again
+            if (ui->stackedWidget && ui->dashboardView)
+                ui->stackedWidget->setCurrentWidget(ui->dashboardView);
+            this->show();
+        } else {
+            // If login cancelled, close the app
+            this->close();
+        }
+    });
+
+    // Show login dialog
+    LoginDialog loginDialog(this);
+    if (loginDialog.exec() == QDialog::Accepted) {
+        // Show all menus after successful login
+        ui->menuFile->menuAction()->setVisible(true);
+        ui->menuConnection->menuAction()->setVisible(true);
+        ui->menuView->menuAction()->setVisible(true);
+        logoutButton->setVisible(true);
+        QMainWindow::showFullScreen(); // Ensure MainWindow is full screen after login
+    } else {
+        QTimer::singleShot(0, this, &QWidget::close);
+        return;
+    }
+    
+    // Get login credentials
+    QString email = loginDialog.getEmail();
+    QString password = loginDialog.getPassword();
+    
+    // TODO: Implement actual authentication logic here
+    
     // Create subsystems
     m_webSocketClient = new WebSocketClient(this);
     m_presentationManager = new PresentationManager(this);
@@ -27,6 +103,101 @@ MainWindow::MainWindow(QWidget *parent)
 
     setupConnections();
     initialize();
+
+    // Connect recent presentations list click
+    connect(ui->recentFilesList, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
+        QString filePath = item->data(Qt::UserRole).toString();
+        if (!filePath.isEmpty()) {
+            bool loaded = m_presentationManager->loadPresentation(filePath);
+            if (loaded && ui->stackedWidget) {
+                ui->stackedWidget->setCurrentIndex(1); // Presentation view
+            }
+        }
+    });
+
+    // Add Home button to Presentation view
+    QHBoxLayout *homeLayout = new QHBoxLayout();
+    homeLayout->setContentsMargins(10, 10, 0, 0);
+    QPushButton *homeButton = new QPushButton(ui->presentationView);
+    homeButton->setIcon(QIcon::fromTheme("go-home", QIcon(":/icons/home.png")));
+    homeButton->setIconSize(QSize(24, 24));
+    homeButton->setFixedSize(40, 40);
+    homeButton->setStyleSheet(R"(
+        QPushButton {
+            background-color: transparent;
+            border: none;
+            border-radius: 20px;
+            padding: 8px;
+        }
+        QPushButton:hover {
+            background-color: rgba(74, 144, 226, 0.1);
+        }
+        QPushButton:pressed {
+            background-color: rgba(74, 144, 226, 0.2);
+        }
+    )");
+    connect(homeButton, &QPushButton::clicked, this, [this]() {
+        ui->stackedWidget->setCurrentIndex(0);
+    });
+    homeLayout->addWidget(homeButton);
+    homeLayout->addStretch();
+    ui->presentationLayout->insertLayout(0, homeLayout);
+
+    // Add Home button to Students view
+    QHBoxLayout *homeLayoutStudents = new QHBoxLayout();
+    homeLayoutStudents->setContentsMargins(10, 10, 0, 0);
+    QPushButton *homeButtonStudents = new QPushButton(ui->studentsView);
+    homeButtonStudents->setIcon(QIcon::fromTheme("go-home", QIcon(":/icons/home.png")));
+    homeButtonStudents->setIconSize(QSize(24, 24));
+    homeButtonStudents->setFixedSize(40, 40);
+    homeButtonStudents->setStyleSheet(R"(
+        QPushButton {
+            background-color: transparent;
+            border: none;
+            border-radius: 20px;
+            padding: 8px;
+        }
+        QPushButton:hover {
+            background-color: rgba(74, 144, 226, 0.1);
+        }
+        QPushButton:pressed {
+            background-color: rgba(74, 144, 226, 0.2);
+        }
+    )");
+    connect(homeButtonStudents, &QPushButton::clicked, this, [this]() {
+        ui->stackedWidget->setCurrentIndex(0);
+    });
+    homeLayoutStudents->addWidget(homeButtonStudents);
+    homeLayoutStudents->addStretch();
+    ui->studentsLayout->insertLayout(0, homeLayoutStudents);
+
+    // Add Home button to QR Code view
+    QHBoxLayout *homeLayoutQR = new QHBoxLayout();
+    homeLayoutQR->setContentsMargins(10, 10, 0, 0);
+    QPushButton *homeButtonQR = new QPushButton(ui->qrCodeView);
+    homeButtonQR->setIcon(QIcon::fromTheme("go-home", QIcon(":/icons/home.png")));
+    homeButtonQR->setIconSize(QSize(24, 24));
+    homeButtonQR->setFixedSize(40, 40);
+    homeButtonQR->setStyleSheet(R"(
+        QPushButton {
+            background-color: transparent;
+            border: none;
+            border-radius: 20px;
+            padding: 8px;
+        }
+        QPushButton:hover {
+            background-color: rgba(74, 144, 226, 0.1);
+        }
+        QPushButton:pressed {
+            background-color: rgba(74, 144, 226, 0.2);
+        }
+    )");
+    connect(homeButtonQR, &QPushButton::clicked, this, [this]() {
+        ui->stackedWidget->setCurrentIndex(0);
+    });
+    homeLayoutQR->addWidget(homeButtonQR);
+    homeLayoutQR->addStretch();
+    ui->qrCodeLayout->insertLayout(0, homeLayoutQR);
 }
 
 MainWindow::~MainWindow()
@@ -374,6 +545,7 @@ void MainWindow::on_actionOpen_triggered()
     // PDF'i yüklemeye çalış
     bool loaded = m_presentationManager->loadPresentation(pathToLoad);
     if (loaded) {
+        addRecentPresentation(pathToLoad);
         if (ui->stackedWidget) {
             ui->stackedWidget->setCurrentIndex(1); // Presentation görünümüne geç
         }
@@ -425,4 +597,96 @@ void MainWindow::on_zoomInButton_clicked()
 void MainWindow::on_zoomOutButton_clicked()
 {
     m_presentationManager->zoomOut();
+}
+
+void MainWindow::on_saveImageButton_clicked()
+{
+    QPixmap pixmap = ui->qrCodePreviewLabel->pixmap();
+    if (pixmap.isNull()) {
+        QMessageBox::warning(this, "Error", "No QR code to save");
+        return;
+    }
+
+    QString fileName = QFileDialog::getSaveFileName(this,
+        "Save QR Code", "",
+        "PNG Images (*.png);;JPEG Images (*.jpg);;All Files (*)");
+
+    if (fileName.isEmpty())
+        return;
+
+    if (!pixmap.save(fileName)) {
+        QMessageBox::warning(this, "Error", "Failed to save QR code image");
+    }
+}
+
+void MainWindow::on_printButton_clicked()
+{
+    QPixmap pixmap = ui->qrCodePreviewLabel->pixmap();
+    if (pixmap.isNull()) {
+        QMessageBox::warning(this, "Error", "No QR code to print");
+        return;
+    }
+
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setPageSize(QPageSize(QPageSize::A4));
+    printer.setPageOrientation(QPageLayout::Portrait);
+
+    QPrintDialog printDialog(&printer, this);
+    if (printDialog.exec() == QDialog::Accepted) {
+        QPainter painter(&printer);
+        QRect rect = painter.viewport();
+        QSize size = pixmap.size();
+        size.scale(rect.size(), Qt::KeepAspectRatio);
+        painter.setViewport(rect.x(), rect.y(), size.width(), size.height());
+        painter.setWindow(pixmap.rect());
+        painter.drawPixmap(0, 0, pixmap);
+    }
+}
+
+void MainWindow::on_displayFullScreenButton_clicked()
+{
+    QPixmap pixmap = ui->qrCodePreviewLabel->pixmap();
+    if (pixmap.isNull()) {
+        QMessageBox::warning(this, "Error", "No QR code to display");
+        return;
+    }
+
+    QDialog *fullScreenDialog = new QDialog(this, Qt::Window | Qt::WindowStaysOnTopHint);
+    fullScreenDialog->setWindowState(Qt::WindowFullScreen);
+    fullScreenDialog->setStyleSheet("background-color: white;");
+
+    QVBoxLayout *layout = new QVBoxLayout(fullScreenDialog);
+    QLabel *label = new QLabel(fullScreenDialog);
+    label->setPixmap(pixmap);
+    label->setAlignment(Qt::AlignCenter);
+    layout->addWidget(label);
+
+    QPushButton *closeButton = new QPushButton("Close", fullScreenDialog);
+    closeButton->setStyleSheet("QPushButton { padding: 10px; font-size: 14px; }");
+    connect(closeButton, &QPushButton::clicked, fullScreenDialog, &QDialog::close);
+    layout->addWidget(closeButton, 0, Qt::AlignCenter);
+
+    fullScreenDialog->show();
+}
+
+void MainWindow::addRecentPresentation(const QString &filePath)
+{
+    if (filePath.isEmpty()) return;
+    m_recentPresentations.removeAll(filePath); // Remove if already exists
+    m_recentPresentations.prepend(filePath); // Add to top
+    if (m_recentPresentations.size() > 10) // Limit to 10
+        m_recentPresentations = m_recentPresentations.mid(0, 10);
+    // Update UI
+    ui->recentFilesList->clear();
+    for (const QString &path : m_recentPresentations) {
+        QListWidgetItem *item = new QListWidgetItem(QFileInfo(path).fileName());
+        item->setToolTip(path);
+        item->setData(Qt::UserRole, path);
+        ui->recentFilesList->addItem(item);
+    }
+}
+
+void MainWindow::showFullScreen()
+{
+    QMainWindow::showFullScreen();
 }

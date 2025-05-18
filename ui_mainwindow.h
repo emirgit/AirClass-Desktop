@@ -14,9 +14,7 @@
 #include <QtGui/QIcon>
 #include <QtPdfWidgets/QPdfView>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QComboBox>
 #include <QtWidgets/QFormLayout>
-#include <QtWidgets/QFrame>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
@@ -27,11 +25,9 @@
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
-#include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QStackedWidget>
 #include <QtWidgets/QStatusBar>
-#include <QtWidgets/QTextEdit>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -112,32 +108,15 @@ public:
     QWidget *qrCodeView;
     QVBoxLayout *qrCodeLayout;
     QLabel *qrCodeLabel;
-    QHBoxLayout *qrCodeMainLayout;
-    QVBoxLayout *qrCodeOptionsLayout;
-    QGroupBox *qrContentGroupBox;
-    QVBoxLayout *qrContentLayout;
-    QRadioButton *sessionRadioButton;
-    QRadioButton *customRadioButton;
-    QTextEdit *customContentTextEdit;
-    QGroupBox *qrSettingsGroupBox;
-    QFormLayout *qrSettingsLayout;
-    QLabel *sizeLevelLabel;
-    QComboBox *sizeComboBox;
-    QLabel *errorLevelLabel;
-    QComboBox *errorCorrectionComboBox;
-    QLabel *colorLabel;
-    QHBoxLayout *colorLayout;
-    QFrame *foregroundColorFrame;
-    QPushButton *chooseColorButton;
-    QHBoxLayout *generateButtonLayout;
-    QSpacerItem *horizontalSpacer_4;
-    QPushButton *generateQRButton;
-    QSpacerItem *horizontalSpacer_5;
-    QSpacerItem *verticalSpacer;
-    QVBoxLayout *qrCodePreviewLayout;
+    QVBoxLayout *qrCodeMainLayout;
     QGroupBox *qrPreviewGroupBox;
     QVBoxLayout *previewLayout;
+    QSpacerItem *verticalSpacer;
+    QHBoxLayout *horizontalLayout_5;
+    QSpacerItem *horizontalSpacer_4;
     QLabel *qrCodePreviewLabel;
+    QSpacerItem *horizontalSpacer_5;
+    QSpacerItem *verticalSpacer_2;
     QGroupBox *shareGroupBox;
     QHBoxLayout *shareOptionsLayout;
     QPushButton *saveImageButton;
@@ -448,131 +427,47 @@ public:
 
         qrCodeLayout->addWidget(qrCodeLabel);
 
-        qrCodeMainLayout = new QHBoxLayout();
+        qrCodeMainLayout = new QVBoxLayout();
         qrCodeMainLayout->setObjectName("qrCodeMainLayout");
-        qrCodeOptionsLayout = new QVBoxLayout();
-        qrCodeOptionsLayout->setObjectName("qrCodeOptionsLayout");
-        qrContentGroupBox = new QGroupBox(qrCodeView);
-        qrContentGroupBox->setObjectName("qrContentGroupBox");
-        qrContentLayout = new QVBoxLayout(qrContentGroupBox);
-        qrContentLayout->setObjectName("qrContentLayout");
-        sessionRadioButton = new QRadioButton(qrContentGroupBox);
-        sessionRadioButton->setObjectName("sessionRadioButton");
-        sessionRadioButton->setChecked(true);
-
-        qrContentLayout->addWidget(sessionRadioButton);
-
-        customRadioButton = new QRadioButton(qrContentGroupBox);
-        customRadioButton->setObjectName("customRadioButton");
-
-        qrContentLayout->addWidget(customRadioButton);
-
-        customContentTextEdit = new QTextEdit(qrContentGroupBox);
-        customContentTextEdit->setObjectName("customContentTextEdit");
-        customContentTextEdit->setEnabled(false);
-
-        qrContentLayout->addWidget(customContentTextEdit);
-
-
-        qrCodeOptionsLayout->addWidget(qrContentGroupBox);
-
-        qrSettingsGroupBox = new QGroupBox(qrCodeView);
-        qrSettingsGroupBox->setObjectName("qrSettingsGroupBox");
-        qrSettingsLayout = new QFormLayout(qrSettingsGroupBox);
-        qrSettingsLayout->setObjectName("qrSettingsLayout");
-        sizeLevelLabel = new QLabel(qrSettingsGroupBox);
-        sizeLevelLabel->setObjectName("sizeLevelLabel");
-
-        qrSettingsLayout->setWidget(0, QFormLayout::ItemRole::LabelRole, sizeLevelLabel);
-
-        sizeComboBox = new QComboBox(qrSettingsGroupBox);
-        sizeComboBox->addItem(QString());
-        sizeComboBox->addItem(QString());
-        sizeComboBox->addItem(QString());
-        sizeComboBox->setObjectName("sizeComboBox");
-
-        qrSettingsLayout->setWidget(0, QFormLayout::ItemRole::FieldRole, sizeComboBox);
-
-        errorLevelLabel = new QLabel(qrSettingsGroupBox);
-        errorLevelLabel->setObjectName("errorLevelLabel");
-
-        qrSettingsLayout->setWidget(1, QFormLayout::ItemRole::LabelRole, errorLevelLabel);
-
-        errorCorrectionComboBox = new QComboBox(qrSettingsGroupBox);
-        errorCorrectionComboBox->addItem(QString());
-        errorCorrectionComboBox->addItem(QString());
-        errorCorrectionComboBox->addItem(QString());
-        errorCorrectionComboBox->addItem(QString());
-        errorCorrectionComboBox->setObjectName("errorCorrectionComboBox");
-
-        qrSettingsLayout->setWidget(1, QFormLayout::ItemRole::FieldRole, errorCorrectionComboBox);
-
-        colorLabel = new QLabel(qrSettingsGroupBox);
-        colorLabel->setObjectName("colorLabel");
-
-        qrSettingsLayout->setWidget(2, QFormLayout::ItemRole::LabelRole, colorLabel);
-
-        colorLayout = new QHBoxLayout();
-        colorLayout->setObjectName("colorLayout");
-        foregroundColorFrame = new QFrame(qrSettingsGroupBox);
-        foregroundColorFrame->setObjectName("foregroundColorFrame");
-        foregroundColorFrame->setMinimumSize(QSize(24, 24));
-        foregroundColorFrame->setFrameShape(QFrame::Shape::StyledPanel);
-
-        colorLayout->addWidget(foregroundColorFrame);
-
-        chooseColorButton = new QPushButton(qrSettingsGroupBox);
-        chooseColorButton->setObjectName("chooseColorButton");
-
-        colorLayout->addWidget(chooseColorButton);
-
-
-        qrSettingsLayout->setLayout(2, QFormLayout::ItemRole::FieldRole, colorLayout);
-
-
-        qrCodeOptionsLayout->addWidget(qrSettingsGroupBox);
-
-        generateButtonLayout = new QHBoxLayout();
-        generateButtonLayout->setObjectName("generateButtonLayout");
-        horizontalSpacer_4 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
-
-        generateButtonLayout->addItem(horizontalSpacer_4);
-
-        generateQRButton = new QPushButton(qrCodeView);
-        generateQRButton->setObjectName("generateQRButton");
-        generateQRButton->setMinimumSize(QSize(120, 0));
-
-        generateButtonLayout->addWidget(generateQRButton);
-
-        horizontalSpacer_5 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
-
-        generateButtonLayout->addItem(horizontalSpacer_5);
-
-
-        qrCodeOptionsLayout->addLayout(generateButtonLayout);
-
-        verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Expanding);
-
-        qrCodeOptionsLayout->addItem(verticalSpacer);
-
-
-        qrCodeMainLayout->addLayout(qrCodeOptionsLayout);
-
-        qrCodePreviewLayout = new QVBoxLayout();
-        qrCodePreviewLayout->setObjectName("qrCodePreviewLayout");
         qrPreviewGroupBox = new QGroupBox(qrCodeView);
         qrPreviewGroupBox->setObjectName("qrPreviewGroupBox");
         previewLayout = new QVBoxLayout(qrPreviewGroupBox);
         previewLayout->setObjectName("previewLayout");
+        verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Expanding);
+
+        previewLayout->addItem(verticalSpacer);
+
+        horizontalLayout_5 = new QHBoxLayout();
+        horizontalLayout_5->setObjectName("horizontalLayout_5");
+        horizontalSpacer_4 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        horizontalLayout_5->addItem(horizontalSpacer_4);
+
         qrCodePreviewLabel = new QLabel(qrPreviewGroupBox);
         qrCodePreviewLabel->setObjectName("qrCodePreviewLabel");
-        qrCodePreviewLabel->setMinimumSize(QSize(300, 300));
+        qrCodePreviewLabel->setMinimumSize(QSize(400, 400));
         qrCodePreviewLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
+        QSizePolicy sizePolicy(QSizePolicy::Policy::Fixed, QSizePolicy::Policy::Fixed);
+        sizePolicy.setHorizontalStretch(0);
+        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHeightForWidth(qrCodePreviewLabel->sizePolicy().hasHeightForWidth());
+        qrCodePreviewLabel->setSizePolicy(sizePolicy);
 
-        previewLayout->addWidget(qrCodePreviewLabel);
+        horizontalLayout_5->addWidget(qrCodePreviewLabel);
+
+        horizontalSpacer_5 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        horizontalLayout_5->addItem(horizontalSpacer_5);
 
 
-        qrCodePreviewLayout->addWidget(qrPreviewGroupBox);
+        previewLayout->addLayout(horizontalLayout_5);
+
+        verticalSpacer_2 = new QSpacerItem(20, 40, QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Expanding);
+
+        previewLayout->addItem(verticalSpacer_2);
+
+
+        qrCodeMainLayout->addWidget(qrPreviewGroupBox);
 
         shareGroupBox = new QGroupBox(qrCodeView);
         shareGroupBox->setObjectName("shareGroupBox");
@@ -600,10 +495,7 @@ public:
         shareOptionsLayout->addWidget(displayFullScreenButton);
 
 
-        qrCodePreviewLayout->addWidget(shareGroupBox);
-
-
-        qrCodeMainLayout->addLayout(qrCodePreviewLayout);
+        qrCodeMainLayout->addWidget(shareGroupBox);
 
 
         qrCodeLayout->addLayout(qrCodeMainLayout);
@@ -646,9 +538,8 @@ public:
         QObject::connect(disconnectButton, SIGNAL(clicked()), MainWindow, SLOT(on_actionDisconnect_triggered()));
         QObject::connect(openPresentationButton, SIGNAL(clicked()), MainWindow, SLOT(on_actionOpen_triggered()));
         QObject::connect(actionGenerate_QR_Code, SIGNAL(triggered()), MainWindow, SLOT(on_actionQRCode_triggered()));
-        QObject::connect(customRadioButton, &QRadioButton::toggled, customContentTextEdit, &QTextEdit::setEnabled);
 
-        stackedWidget->setCurrentIndex(3);
+        stackedWidget->setCurrentIndex(2);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -702,28 +593,8 @@ public:
         approveButton->setText(QCoreApplication::translate("MainWindow", "Approve", nullptr));
         rejectButton->setText(QCoreApplication::translate("MainWindow", "Reject", nullptr));
         qrCodeLabel->setText(QCoreApplication::translate("MainWindow", "QR Code Generator", nullptr));
-        qrContentGroupBox->setTitle(QCoreApplication::translate("MainWindow", "QR Code Content", nullptr));
-        sessionRadioButton->setText(QCoreApplication::translate("MainWindow", "Current Session Information", nullptr));
-        customRadioButton->setText(QCoreApplication::translate("MainWindow", "Custom Content", nullptr));
-        customContentTextEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "Enter custom content for QR code here...", nullptr));
-        qrSettingsGroupBox->setTitle(QCoreApplication::translate("MainWindow", "QR Code Settings", nullptr));
-        sizeLevelLabel->setText(QCoreApplication::translate("MainWindow", "Size:", nullptr));
-        sizeComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "Small", nullptr));
-        sizeComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Medium", nullptr));
-        sizeComboBox->setItemText(2, QCoreApplication::translate("MainWindow", "Large", nullptr));
-
-        errorLevelLabel->setText(QCoreApplication::translate("MainWindow", "Error Correction:", nullptr));
-        errorCorrectionComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "Low (L)", nullptr));
-        errorCorrectionComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Medium (M)", nullptr));
-        errorCorrectionComboBox->setItemText(2, QCoreApplication::translate("MainWindow", "Quality (Q)", nullptr));
-        errorCorrectionComboBox->setItemText(3, QCoreApplication::translate("MainWindow", "High (H)", nullptr));
-
-        colorLabel->setText(QCoreApplication::translate("MainWindow", "Foreground Color:", nullptr));
-        foregroundColorFrame->setStyleSheet(QCoreApplication::translate("MainWindow", "background-color: black; border: 1px solid gray;", nullptr));
-        chooseColorButton->setText(QCoreApplication::translate("MainWindow", "Choose...", nullptr));
-        generateQRButton->setText(QCoreApplication::translate("MainWindow", "Generate QR Code", nullptr));
         qrPreviewGroupBox->setTitle(QCoreApplication::translate("MainWindow", "QR Code Preview", nullptr));
-        qrCodePreviewLabel->setStyleSheet(QCoreApplication::translate("MainWindow", "border: 1px solid #cccccc;", nullptr));
+        qrCodePreviewLabel->setStyleSheet(QCoreApplication::translate("MainWindow", "border: 1px solid #cccccc; background-color: white; padding: 20px; margin: 20px;", nullptr));
         qrCodePreviewLabel->setText(QCoreApplication::translate("MainWindow", "QR Code will appear here", nullptr));
         shareGroupBox->setTitle(QCoreApplication::translate("MainWindow", "Share Options", nullptr));
         saveImageButton->setText(QCoreApplication::translate("MainWindow", "Save Image", nullptr));
