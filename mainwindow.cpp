@@ -19,6 +19,7 @@
 #include <QHBoxLayout>
 #include <QTextStream>
 #include <QFile>
+#include <QScrollArea>
 #include "testdata.h"
 
 // Include UI header in implementation file, not in header
@@ -56,10 +57,10 @@ MainWindow::MainWindow(QWidget *parent)
         // Create and show login dialog first
         LoginDialog loginDialog;
         loginDialog.show();
-        
+
         // Then hide main window
         this->hide();
-        
+
         if (loginDialog.exec() == QDialog::Accepted) {
             // On successful login, show all menus
             ui->menuFile->menuAction()->setVisible(true);
@@ -85,18 +86,24 @@ MainWindow::MainWindow(QWidget *parent)
         ui->menuConnection->menuAction()->setVisible(true);
         ui->menuView->menuAction()->setVisible(true);
         logoutButton->setVisible(true);
-        QMainWindow::showFullScreen(); // Ensure MainWindow is full screen after login
+
+        // Set window state based on login dialog
+        if (loginDialog.isFullScreen()) {
+            QMainWindow::showFullScreen();
+        } else {
+            QMainWindow::showNormal();
+        }
     } else {
         QTimer::singleShot(0, this, &QWidget::close);
         return;
     }
-    
+
     // Get login credentials
     QString email = loginDialog.getEmail();
     QString password = loginDialog.getPassword();
-    
+
     // TODO: Implement actual authentication logic here
-    
+
     // Create subsystems
     m_webSocketClient = new WebSocketClient(this);
     m_presentationManager = new PresentationManager(this);
@@ -229,8 +236,8 @@ MainWindow::MainWindow(QWidget *parent)
 
         // Get save file path
         QString fileName = QFileDialog::getSaveFileName(this,
-            "Save Attendance Report", "",
-            "CSV Files (*.csv);;All Files (*)");
+                                                        "Save Attendance Report", "",
+                                                        "CSV Files (*.csv);;All Files (*)");
 
         if (fileName.isEmpty())
             return;
@@ -273,10 +280,10 @@ MainWindow::MainWindow(QWidget *parent)
             QString studentId = parts[0];
             QString studentName = parts[1];
             QString message = parts[2];
-            
+
             QListWidgetItem *item = new QListWidgetItem(
                 QString("%1: %2").arg(studentName, message)
-            );
+                );
             item->setData(Qt::UserRole, studentId);
             ui->requestListWidget->addItem(item);
         }
@@ -289,13 +296,13 @@ MainWindow::MainWindow(QWidget *parent)
             if (currentItem) {
                 QString studentId = currentItem->data(Qt::UserRole).toString();
                 QString studentName = currentItem->text().split(':')[0];
-                
+
                 // Remove from request list
                 delete ui->requestListWidget->takeItem(ui->requestListWidget->row(currentItem));
-                
+
                 // Show approval message
-                QMessageBox::information(this, "Approved", 
-                    QString("Speak request approved for %1").arg(studentName));
+                QMessageBox::information(this, "Approved",
+                                         QString("Speak request approved for %1").arg(studentName));
             }
         });
     }
@@ -306,13 +313,13 @@ MainWindow::MainWindow(QWidget *parent)
             if (currentItem) {
                 QString studentId = currentItem->data(Qt::UserRole).toString();
                 QString studentName = currentItem->text().split(':')[0];
-                
+
                 // Remove from request list
                 delete ui->requestListWidget->takeItem(ui->requestListWidget->row(currentItem));
-                
+
                 // Show rejection message
-                QMessageBox::information(this, "Rejected", 
-                    QString("Speak request rejected for %1").arg(studentName));
+                QMessageBox::information(this, "Rejected",
+                                         QString("Speak request rejected for %1").arg(studentName));
             }
         });
     }
@@ -444,11 +451,11 @@ void MainWindow::setupConnections()
     connect(ui->actionDashboard, &QAction::triggered, [this]() {
         ui->stackedWidget->setCurrentIndex(0);
     });
-    
+
     connect(ui->actionPresentation, &QAction::triggered, [this]() {
         ui->stackedWidget->setCurrentIndex(1);
     });
-    
+
     connect(ui->actionStudents, &QAction::triggered, [this]() {
         ui->stackedWidget->setCurrentIndex(2);
     });
@@ -456,25 +463,234 @@ void MainWindow::setupConnections()
     connect(ui->actionGenerate_QR_Code, &QAction::triggered, [this]() {
         ui->stackedWidget->setCurrentIndex(3);
     });
-    // Connect qr code
-    // connect(ui->actionGenerate_QR_Code, &QPushButton::clicked, [this]() {
-        // if (ui->actionGenerate_QR_Code) {
-    //         QString qrCodeData = "https://example.com"; // Replace with actual data
-    //         m_uiController->showQRCode(qrCodeData);
-        // }
-    //     ui->stackedWidget->setCurrentIndex(3); // QR Code view index
-    //     // add qdebug message
-    //     qDebug() << "QR Code generated and displayed";
-    // });
 
+    // Add Gesture Guide action
+    QAction *actionGestureGuide = new QAction("Gesture Guide", this);
+    ui->menuView->addAction(actionGestureGuide);
+    connect(actionGestureGuide, &QAction::triggered, [this]() {
+        QDialog *gestureDialog = new QDialog(this);
+        gestureDialog->setWindowTitle("Gesture Guide");
+        gestureDialog->setMinimumSize(400, 500);
+
+        QVBoxLayout *layout = new QVBoxLayout(gestureDialog);
+
+        // Create a scroll area for gestures
+        QScrollArea *scrollArea = new QScrollArea(gestureDialog);
+        QWidget *scrollContent = new QWidget(scrollArea);
+        QVBoxLayout *scrollLayout = new QVBoxLayout(scrollContent);
+
+        // Add gesture items
+        struct GestureItem {
+            QString emoji;
+            QString name;
+            QString description;
+        };
+
+        QList<GestureItem> gestures = {
+            {"👎", "Dislike", "Reject speak request from mobile"},
+            {"👍", "Like", "Approve speak request from mobile"},
+            {"🤫", "Mute", "Play alarm sound to get attention and maintain silence"},
+            {"☝️", "One", "Draw mode"},
+            {"✌️", "Two Up", "Pointer mode"},
+            {"⏰", "Timeout", "Start 15-minute countdown"},
+            {"➡️", "Right", "Previous slide"},
+            {"⬅️", "Left", "Next slide"}
+        };
+
+        for (const auto &gesture : gestures) {
+            QWidget *gestureWidget = new QWidget(scrollContent);
+            QHBoxLayout *gestureLayout = new QHBoxLayout(gestureWidget);
+
+            QLabel *emojiLabel = new QLabel(gesture.emoji, gestureWidget);
+            emojiLabel->setStyleSheet("font-size: 24px;");
+
+            QLabel *nameLabel = new QLabel(gesture.name, gestureWidget);
+            nameLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
+
+            QLabel *descLabel = new QLabel(gesture.description, gestureWidget);
+            descLabel->setWordWrap(true);
+
+            gestureLayout->addWidget(emojiLabel);
+            gestureLayout->addWidget(nameLabel);
+            gestureLayout->addWidget(descLabel);
+            gestureLayout->setStretch(2, 1); // Make description take more space
+
+            scrollLayout->addWidget(gestureWidget);
+        }
+
+        scrollContent->setLayout(scrollLayout);
+        scrollArea->setWidget(scrollContent);
+        scrollArea->setWidgetResizable(true);
+        layout->addWidget(scrollArea);
+
+        // Add close button
+        QPushButton *closeButton = new QPushButton("Close", gestureDialog);
+        closeButton->setStyleSheet(R"(
+            QPushButton {
+                padding: 8px 16px;
+                background-color: #6c757d;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #5a6268;
+            }
+            QPushButton:pressed {
+                background-color: #545b62;
+            }
+        )");
+        connect(closeButton, &QPushButton::clicked, gestureDialog, &QDialog::close);
+        layout->addWidget(closeButton, 0, Qt::AlignCenter);
+
+        gestureDialog->setLayout(layout);
+        gestureDialog->exec();
+    });
+
+    // Add timeout functionality
+    QAction *actionTimeout = new QAction("Timeout", this);
+    actionTimeout->setShortcut(QKeySequence("Ctrl+T")); // Add keyboard shortcut
+    ui->menuView->addAction(actionTimeout);
+
+    connect(actionTimeout, &QAction::triggered, [this]() {
+        QDialog *timeoutDialog = new QDialog(this);
+        timeoutDialog->setWindowTitle("Timeout");
+        timeoutDialog->setFixedSize(300, 200);
+
+        QVBoxLayout *layout = new QVBoxLayout(timeoutDialog);
+
+        QLabel *timeLabel = new QLabel("15:00", timeoutDialog);
+        timeLabel->setStyleSheet(R"(
+            QLabel {
+                font-size: 48px;
+                font-weight: bold;
+                color: #dc3545;
+                qproperty-alignment: AlignCenter;
+            }
+        )");
+
+        QHBoxLayout *controlLayout = new QHBoxLayout();
+        QPushButton *decreaseButton = new QPushButton("-", timeoutDialog);
+        QPushButton *increaseButton = new QPushButton("+", timeoutDialog);
+
+        decreaseButton->setFixedSize(40, 40);
+        increaseButton->setFixedSize(40, 40);
+
+        QString controlButtonStyle = R"(
+            QPushButton {
+                font-size: 24px;
+                font-weight: bold;
+                padding: 5px;
+                border: 2px solid #dc3545;
+                border-radius: 4px;
+                background-color: #ffffff;
+                color: #dc3545;
+                min-width: 40px;
+                min-height: 40px;
+            }
+            QPushButton:hover {
+                background-color: #dc3545;
+                color: #ffffff;
+            }
+            QPushButton:pressed {
+                background-color: #c82333;
+                color: #ffffff;
+            }
+        )";
+
+        decreaseButton->setStyleSheet(controlButtonStyle);
+        increaseButton->setStyleSheet(controlButtonStyle);
+
+        controlLayout->addStretch();
+        controlLayout->addWidget(decreaseButton);
+        controlLayout->addWidget(increaseButton);
+        controlLayout->addStretch();
+
+        QPushButton *startButton = new QPushButton("Start", timeoutDialog);
+        startButton->setStyleSheet(R"(
+            QPushButton {
+                padding: 8px 16px;
+                background-color: #dc3545;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #c82333;
+            }
+            QPushButton:pressed {
+                background-color: #bd2130;
+            }
+        )");
+
+        layout->addWidget(timeLabel);
+        layout->addLayout(controlLayout);
+        layout->addWidget(startButton);
+
+        QTimer *timer = new QTimer(timeoutDialog);
+        int remainingSeconds = 15 * 60; // Default 15 minutes
+
+        // Update the displayed time
+        auto updateTimerDisplay = [=](QLabel* label, int seconds) {
+            int minutes = seconds / 60;
+            int secs = seconds % 60;
+            label->setText(QString("%1:%2")
+                               .arg(minutes, 2, 10, QChar('0'))
+                               .arg(secs, 2, 10, QChar('0')));
+        };
+
+        // Connect decrease/increase buttons
+        connect(decreaseButton, &QPushButton::clicked, [=]() mutable {
+            if (!timer->isActive() && remainingSeconds > 60) { // Minimum 1 minute
+                remainingSeconds -= 60;
+                updateTimerDisplay(timeLabel, remainingSeconds);
+            }
+        });
+
+        connect(increaseButton, &QPushButton::clicked, [=]() mutable {
+            if (!timer->isActive() && remainingSeconds < 3600) { // Maximum 60 minutes
+                remainingSeconds += 60;
+                updateTimerDisplay(timeLabel, remainingSeconds);
+            }
+        });
+
+        connect(startButton, &QPushButton::clicked, [=]() mutable {
+            if (timer->isActive()) {
+                timer->stop();
+                startButton->setText("Start");
+            } else {
+                timer->start(1000); // Update every second
+                startButton->setText("Stop");
+            }
+        });
+
+        connect(timer, &QTimer::timeout, [=]() mutable {
+            remainingSeconds--;
+            if (remainingSeconds < 0) {
+                timer->stop();
+                startButton->setText("Start");
+                remainingSeconds = 15 * 60; // Reset to 15 minutes only when timer reaches zero
+                updateTimerDisplay(timeLabel, remainingSeconds);
+                QMessageBox::information(timeoutDialog, "Timeout", "Time's up!");
+                return;
+            }
+            updateTimerDisplay(timeLabel, remainingSeconds);
+        });
+
+        updateTimerDisplay(timeLabel, remainingSeconds); // Initial display
+
+        timeoutDialog->setLayout(layout);
+        timeoutDialog->exec();
+    });
 
     // Connect presentation manager signals
     connect(m_presentationManager, &PresentationManager::error, [this](const QString &errorMessage) {
         QMessageBox::warning(this, tr("PDF Error"), errorMessage);
     });
-
-
-
 
     connect(m_presentationManager, &PresentationManager::pageChanged, [this](int currentPage, int totalPages) {
         ui->pageIndicatorLabel->setText(tr("Page %1 of %2").arg(currentPage + 1).arg(totalPages));
@@ -571,7 +787,7 @@ void MainWindow::handleServerMessage(const QString &message)
             qWarning() << "QR Code data is empty";
         }
     }
-    
+
     else {
         qWarning() << "Unknown message type:" << messageType;
     }
@@ -726,8 +942,8 @@ void MainWindow::on_saveImageButton_clicked()
     }
 
     QString fileName = QFileDialog::getSaveFileName(this,
-        "Save QR Code", "",
-        "PNG Images (*.png);;JPEG Images (*.jpg);;All Files (*)");
+                                                    "Save QR Code", "",
+                                                    "PNG Images (*.png);;JPEG Images (*.jpg);;All Files (*)");
 
     if (fileName.isEmpty())
         return;
@@ -807,4 +1023,14 @@ void MainWindow::addRecentPresentation(const QString &filePath)
 void MainWindow::showFullScreen()
 {
     QMainWindow::showFullScreen();
+}
+
+QPdfView* MainWindow::getPdfView() const
+{
+    // Find the PDF view widget in the UI
+    QPdfView* pdfView = findChild<QPdfView*>();
+    if (!pdfView) {
+        qWarning() << "PDF view not found in MainWindow";
+    }
+    return pdfView;
 }

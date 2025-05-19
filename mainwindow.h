@@ -5,7 +5,8 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QMessageBox>
-#include <QPushButton> // Add explicit include for QPushButton
+#include <QPushButton>
+#include <QPdfView>
 
 #include "websocketclient.h"
 #include "presentationmanager.h"
@@ -27,6 +28,14 @@ public:
     ~MainWindow();
 
     void initialize();
+    PresentationManager* getPresentationManager() const { return m_presentationManager; }
+
+    // Public methods for gesture handling
+    void handleSpeakRequest(const QJsonObject &data);
+    void handleGestureCommand(const QJsonObject &data);
+
+    // Public method to get PDF view
+    QPdfView* getPdfView() const;
 
 private slots:
     void onConnected();
@@ -62,8 +71,6 @@ private:
     // Message handlers
     void handleSlideCommand(const QJsonObject &data);
     void handleAttendanceMessage(const QJsonObject &data);
-    void handleGestureCommand(const QJsonObject &data);
-    void handleSpeakRequest(const QJsonObject &data);
 
     void setupConnections();
 };
