@@ -12,14 +12,20 @@ LoginDialog::LoginDialog(QWidget *parent)
     : QDialog(parent)
 {
     setWindowTitle("AirClass - Welcome");
-    setWindowFlags(Qt::Window | Qt::FramelessWindowHint); // Remove window frame
-    showFullScreen();
+    // Set window flags to enable maximize button and window controls
+    setWindowFlags(Qt::Window | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+    
+    // Set minimum size for the window
+    setMinimumSize(400, 600);
     
     // Center the dialog on the screen
     QRect screenGeometry = QApplication::primaryScreen()->geometry();
     int x = (screenGeometry.width() - width()) / 2;
     int y = (screenGeometry.height() - height()) / 2;
     move(x, y);
+
+    // Store window state
+    m_isFullScreen = false;
 
     setStyleSheet(R"(
         QDialog {
@@ -312,4 +318,19 @@ QString LoginDialog::getPassword() const
 void LoginDialog::showEvent(QShowEvent *event)
 {
     QDialog::showEvent(event);
+}
+
+bool LoginDialog::isFullScreen() const
+{
+    return m_isFullScreen;
+}
+
+void LoginDialog::setFullScreen(bool fullScreen)
+{
+    m_isFullScreen = fullScreen;
+    if (fullScreen) {
+        showFullScreen();
+    } else {
+        showNormal();
+    }
 } 

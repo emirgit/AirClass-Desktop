@@ -86,7 +86,13 @@ MainWindow::MainWindow(QWidget *parent)
         ui->menuConnection->menuAction()->setVisible(true);
         ui->menuView->menuAction()->setVisible(true);
         logoutButton->setVisible(true);
-        QMainWindow::showFullScreen(); // Ensure MainWindow is full screen after login
+        
+        // Set window state based on login dialog
+        if (loginDialog.isFullScreen()) {
+            QMainWindow::showFullScreen();
+        } else {
+            QMainWindow::showNormal();
+        }
     } else {
         QTimer::singleShot(0, this, &QWidget::close);
         return;
@@ -551,7 +557,7 @@ void MainWindow::setupConnections()
     connect(actionTimeout, &QAction::triggered, [this]() {
         QDialog *timeoutDialog = new QDialog(this);
         timeoutDialog->setWindowTitle("Timeout");
-        timeoutDialog->setFixedSize(300, 200); // Increase size to accommodate buttons
+        timeoutDialog->setFixedSize(300, 200);
         
         QVBoxLayout *layout = new QVBoxLayout(timeoutDialog);
         
@@ -577,15 +583,20 @@ void MainWindow::setupConnections()
                 font-size: 24px;
                 font-weight: bold;
                 padding: 5px;
-                border: 1px solid #cccccc;
+                border: 2px solid #dc3545;
                 border-radius: 4px;
-                background-color: #f8f9fa;
+                background-color: #ffffff;
+                color: #dc3545;
+                min-width: 40px;
+                min-height: 40px;
             }
             QPushButton:hover {
-                background-color: #e2e6ea;
+                background-color: #dc3545;
+                color: #ffffff;
             }
             QPushButton:pressed {
-                background-color: #dae0e5;
+                background-color: #c82333;
+                color: #ffffff;
             }
         )";
 
@@ -621,8 +632,7 @@ void MainWindow::setupConnections()
         layout->addWidget(startButton);
         
         QTimer *timer = new QTimer(timeoutDialog);
-        int initialRemainingSeconds = 15 * 60; // Default 15 minutes
-        int remainingSeconds = initialRemainingSeconds;
+        int remainingSeconds = 15 * 60; // Default 15 minutes
         
         // Update the displayed time
         auto updateTimerDisplay = [=](QLabel* label, int seconds) {
@@ -642,7 +652,7 @@ void MainWindow::setupConnections()
         });
 
         connect(increaseButton, &QPushButton::clicked, [=]() mutable {
-             if (!timer->isActive() && remainingSeconds < 3600) { // Maximum 60 minutes
+            if (!timer->isActive() && remainingSeconds < 3600) { // Maximum 60 minutes
                 remainingSeconds += 60;
                 updateTimerDisplay(timeLabel, remainingSeconds);
             }
@@ -652,10 +662,7 @@ void MainWindow::setupConnections()
             if (timer->isActive()) {
                 timer->stop();
                 startButton->setText("Start");
-                remainingSeconds = initialRemainingSeconds; // Reset on Stop
-                updateTimerDisplay(timeLabel, remainingSeconds);
             } else {
-                initialRemainingSeconds = remainingSeconds; // Save current duration as initial
                 timer->start(1000); // Update every second
                 startButton->setText("Stop");
             }
@@ -666,7 +673,7 @@ void MainWindow::setupConnections()
             if (remainingSeconds < 0) {
                 timer->stop();
                 startButton->setText("Start");
-                remainingSeconds = initialRemainingSeconds; // Reset after timeout
+                remainingSeconds = 15 * 60; // Reset to 15 minutes only when timer reaches zero
                 updateTimerDisplay(timeLabel, remainingSeconds);
                 QMessageBox::information(timeoutDialog, "Timeout", "Time's up!");
                 return;

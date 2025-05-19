@@ -4499,23 +4499,25 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/opt/homebrew/include/QtWidgets/qlayout.h \
 		/opt/homebrew/include/QtWidgets/qlayoutitem.h \
 		/opt/homebrew/include/QtWidgets/qgridlayout.h \
+		/opt/homebrew/include/QtGui/QIcon \
+		/opt/homebrew/include/QtWidgets/QHBoxLayout \
+		/opt/homebrew/include/QtCore/QTextStream \
+		/opt/homebrew/include/QtCore/QFile \
+		/opt/homebrew/include/QtWidgets/QScrollArea \
+		/opt/homebrew/include/QtWidgets/qscrollarea.h \
+		testdata.h \
 		ui_mainwindow.h \
 		/opt/homebrew/include/QtGui/QAction \
-		/opt/homebrew/include/QtGui/QIcon \
 		/opt/homebrew/include/QtPdfWidgets/QPdfView \
 		/opt/homebrew/include/QtPdfWidgets/qpdfview.h \
 		/opt/homebrew/include/QtWidgets/QApplication \
 		/opt/homebrew/include/QtWidgets/qapplication.h \
-		/opt/homebrew/include/QtWidgets/QComboBox \
-		/opt/homebrew/include/QtWidgets/qcombobox.h \
 		/opt/homebrew/include/QtWidgets/QFormLayout \
 		/opt/homebrew/include/QtWidgets/qformlayout.h \
 		/opt/homebrew/include/QtWidgets/QLayout \
-		/opt/homebrew/include/QtWidgets/QFrame \
 		/opt/homebrew/include/QtWidgets/QGridLayout \
 		/opt/homebrew/include/QtWidgets/QGroupBox \
 		/opt/homebrew/include/QtWidgets/qgroupbox.h \
-		/opt/homebrew/include/QtWidgets/QHBoxLayout \
 		/opt/homebrew/include/QtWidgets/QLineEdit \
 		/opt/homebrew/include/QtWidgets/qlineedit.h \
 		/opt/homebrew/include/QtGui/qtextcursor.h \
@@ -4524,13 +4526,9 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/opt/homebrew/include/QtWidgets/qmenu.h \
 		/opt/homebrew/include/QtWidgets/QMenuBar \
 		/opt/homebrew/include/QtWidgets/qmenubar.h \
-		/opt/homebrew/include/QtWidgets/QRadioButton \
-		/opt/homebrew/include/QtWidgets/qradiobutton.h \
 		/opt/homebrew/include/QtWidgets/QSpacerItem \
 		/opt/homebrew/include/QtWidgets/QStatusBar \
 		/opt/homebrew/include/QtWidgets/qstatusbar.h \
-		/opt/homebrew/include/QtWidgets/QTextEdit \
-		/opt/homebrew/include/QtWidgets/qtextedit.h \
 		logindialog.h \
 		/opt/homebrew/include/QtWidgets/QDialog \
 		/opt/homebrew/include/QtGui/QShowEvent
@@ -5701,7 +5699,9 @@ logindialog.o: logindialog.cpp logindialog.h \
 		/opt/homebrew/include/QtWidgets/qapplication.h \
 		/opt/homebrew/include/QtGui/QScreen \
 		/opt/homebrew/include/QtCore/QTimer \
-		/opt/homebrew/include/QtCore/qtimer.h
+		/opt/homebrew/include/QtCore/qtimer.h \
+		/opt/homebrew/include/QtWidgets/QDialogButtonBox \
+		/opt/homebrew/include/QtGui/QGuiApplication
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o logindialog.o logindialog.cpp
 
 qrc_qmake_qmake_qm_files.o: qrc_qmake_qmake_qm_files.cpp 
