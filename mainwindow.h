@@ -29,11 +29,11 @@ public:
 
     void initialize();
     PresentationManager* getPresentationManager() const { return m_presentationManager; }
-
+    
     // Public methods for gesture handling
     void handleSpeakRequest(const QJsonObject &data);
     void handleGestureCommand(const QJsonObject &data);
-
+    
     // Public method to get PDF view
     QPdfView* getPdfView() const;
 

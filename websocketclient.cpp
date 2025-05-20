@@ -1,5 +1,8 @@
 #include "websocketclient.h"
 #include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 
 WebSocketClient::WebSocketClient(QObject *parent)
     : QObject(parent)
@@ -74,8 +77,41 @@ void WebSocketClient::onDisconnected()
 
 void WebSocketClient::onTextMessageReceived(const QString &message)
 {
-    qDebug() << "Message received from server:" << message;
-    emit messageReceived(message);
+    qDebug() << "Raw message received from server:" << message;
+    
+    // Parse the JSON message
+    QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
+    if (doc.isNull()) {
+        qWarning() << "Invalid JSON message received";
+        return;
+    }
+
+    QJsonObject obj = doc.object();
+    QString type = obj["type"].toString();
+
+    qDebug() << "Processing message type:" << type;
+
+    if (type == "gesture") {
+        QString gestureType = obj["gesture_type"].toString();
+        QString clientId = obj["client_id"].toString();
+        QString timestamp = obj["timestamp"].toString();
+        
+        qDebug() << "Emitting gesture signal:" << gestureType << "from client:" << clientId;
+        emit gestureReceived(gestureType, clientId, timestamp);
+    }
+    else if (type == "page_navigation") {
+        QString action = obj["action"].toString();
+        QString clientId = obj["client_id"].toString();
+        QString timestamp = obj["timestamp"].toString();
+        
+        qDebug() << "Emitting page navigation signal:" << action << "from client:" << clientId;
+        emit pageNavigationReceived(action, clientId, timestamp);
+    }
+    else {
+        // For other message types, emit the general messageReceived signal
+        qDebug() << "Emitting general message signal for type:" << type;
+        emit messageReceived(message);
+    }
 }
 
 void WebSocketClient::onError(QAbstractSocket::SocketError error)

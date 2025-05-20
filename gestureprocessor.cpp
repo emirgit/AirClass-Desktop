@@ -23,15 +23,19 @@ GestureProcessor::GestureProcessor(QObject *parent)
     registerGestureCommand("Accept the request", [mainWindow]() {
         qDebug() << "Gesture: Accept request";
         QJsonObject data;
-        data["action"] = "accept";
-        mainWindow->handleSpeakRequest(data);
+        data["gesture_type"] = "THUMB_UP";
+        data["client_id"] = "gesture";
+        data["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        mainWindow->handleGestureCommand(data);
     });
 
     registerGestureCommand("Deny the request", [mainWindow]() {
         qDebug() << "Gesture: Deny request";
         QJsonObject data;
-        data["action"] = "deny";
-        mainWindow->handleSpeakRequest(data);
+        data["gesture_type"] = "THUMB_DOWN";
+        data["client_id"] = "gesture";
+        data["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        mainWindow->handleGestureCommand(data);
     });
 
     registerGestureCommand("Next slide", [presentationManager]() {
@@ -89,14 +93,18 @@ GestureProcessor::GestureProcessor(QObject *parent)
     registerGestureCommand("Attention", [mainWindow]() {
         qDebug() << "Gesture: Attention";
         QJsonObject data;
-        data["action"] = "attention";
+        data["gesture_type"] = "WAVE";
+        data["client_id"] = "gesture";
+        data["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
         mainWindow->handleGestureCommand(data);
     });
 
     registerGestureCommand("Time out", [mainWindow]() {
         qDebug() << "Gesture: Time out";
         QJsonObject data;
-        data["action"] = "timeout";
+        data["gesture_type"] = "TIMEOUT";
+        data["client_id"] = "gesture";
+        data["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
         mainWindow->handleGestureCommand(data);
     });
 }

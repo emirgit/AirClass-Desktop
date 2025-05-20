@@ -3,6 +3,8 @@
 #include <QFileInfo>
 #include <QPdfPageNavigator>
 #include <QElapsedTimer>
+#include <QScrollBar>
+#include <QPointF>
 
 
 PresentationManager::PresentationManager(QObject *parent)
@@ -129,65 +131,72 @@ void PresentationManager::previousSlide()
 void PresentationManager::goToSlide(int pageNumber)
 {
     if (!m_document || !m_pdfView) {
+        qDebug() << "Cannot change page: document or view is null";
         return;
     }
 
     // Check if the page number is valid
     if (pageNumber >= 0 && pageNumber < m_document->pageCount()) {
         m_currentPage = pageNumber;
-
+        
         // Sayfa değişimi pageNavigator üzerinden yapılır
         if (m_pdfView->pageNavigator()) {
             m_pdfView->pageNavigator()->jump(m_currentPage, QPoint());
         }
-
+        
         emit pageChanged(m_currentPage, m_document->pageCount());
+        qDebug() << "Changed to page:" << m_currentPage + 1 << "of" << m_document->pageCount();
+    } else {
+        qDebug() << "Invalid page number:" << pageNumber;
     }
 }
-
-
-
 
 void PresentationManager::zoomIn()
 {
     static QElapsedTimer lastCallTime;
     if (lastCallTime.isValid() && lastCallTime.elapsed() < 200) {  // 200ms içinde ikinci çağrıyı yok say
-
         return;
     }
 
     lastCallTime.restart();
-
     qDebug() << "zoomin";
-    setZoomLevel(m_zoomLevel * 1.25);
+    setZoomLevel(m_zoomLevel * 1.25, QPointF(-1, -1));
 }
 
 void PresentationManager::zoomOut()
 {
     static QElapsedTimer lastCallTime;
     if (lastCallTime.isValid() && lastCallTime.elapsed() < 200) {  // 200ms içinde ikinci çağrıyı yok say
-
         return;
     }
 
     lastCallTime.restart();
-
-    setZoomLevel(m_zoomLevel * 0.8);
+    setZoomLevel(m_zoomLevel * 0.8, QPointF(-1, -1));
 }
 
-void PresentationManager::setZoomLevel(qreal zoomFactor)
+void PresentationManager::setZoomLevel(qreal zoomFactor, const QPointF &center)
 {
     // Limit zoom range
     if (zoomFactor < 0.25) zoomFactor = 0.25;
     if (zoomFactor > 5.0) zoomFactor = 5.0;
 
     m_zoomLevel = zoomFactor;
-
     if (m_pdfView) {
         m_pdfView->setZoomFactor(m_zoomLevel);
+        
+        // If a center point is provided, adjust the scroll position
+        if (center != QPointF(-1, -1)) {
+            QSize viewportSize = m_pdfView->viewport()->size();
+            QPointF newViewTopLeft = center - QPointF(viewportSize.width() * 0.5, viewportSize.height() * 0.5);
+            m_pdfView->horizontalScrollBar()->setValue(static_cast<int>(newViewTopLeft.x()));
+            m_pdfView->verticalScrollBar()->setValue(static_cast<int>(newViewTopLeft.y()));
+        }
     }
-
     emit zoomChanged(m_zoomLevel);
+}
+
+void PresentationManager::setZoomLevel(qreal zoomFactor) {
+    setZoomLevel(zoomFactor, QPointF(-1, -1));
 }
 
 void PresentationManager::highlight(const QRect &area)

@@ -335,7 +335,7 @@ void MainWindow::initialize()
     // Set window properties
     setWindowTitle("AirClass Desktop");
 
-    // Pass UI elements to managers and controllers - these should be defined in ui_mainwindow.h
+    // Pass UI elements to managers and controllers
     if (ui->studentListWidget && ui->requestListWidget) {
         m_attendanceManager->setStudentListWidget(ui->studentListWidget);
         m_attendanceManager->setRequestListWidget(ui->requestListWidget);
@@ -346,29 +346,28 @@ void MainWindow::initialize()
         m_presentationManager->setPdfView(ui->pdfView);
     }
 
-    // Set up UI controller with views
-    // if (ui->presentationPage && ui->dashboardPage && ui->studentsPage) {
-    //     m_uiController->setupViews(ui->presentationPage, ui->dashboardPage, ui->studentsPage);
-    // }
-
     // Setup WebSocket connection
-    m_webSocketClient->connectToServer("ws://localhost:12345");  // Static server URL for simplicity
+    qDebug() << "Connecting to WebSocket server...";
+    m_webSocketClient->connectToServer("ws://localhost:9090");  // Updated port to match server
 
     // Register gesture commands
     m_gestureProcessor->registerGestureCommand("next_slide", [this]() {
-        qDebug() << "gesture next";
+        qDebug() << "Executing next slide command";
         m_presentationManager->nextSlide();
     });
 
     m_gestureProcessor->registerGestureCommand("prev_slide", [this]() {
+        qDebug() << "Executing previous slide command";
         m_presentationManager->previousSlide();
     });
 
     m_gestureProcessor->registerGestureCommand("zoom_in", [this]() {
+        qDebug() << "Executing zoom in command";
         m_presentationManager->zoomIn();
     });
 
     m_gestureProcessor->registerGestureCommand("zoom_out", [this]() {
+        qDebug() << "Executing zoom out command";
         m_presentationManager->zoomOut();
     });
 
@@ -382,7 +381,48 @@ void MainWindow::setupConnections()
     connect(m_webSocketClient, &WebSocketClient::disconnected, this, &MainWindow::onDisconnected);
     connect(m_webSocketClient, &WebSocketClient::messageReceived, this, &MainWindow::handleServerMessage);
 
-    // Connect UI buttons to actions - use dynamic property approach to avoid direct access issues
+    // Connect gesture and page navigation signals
+    connect(m_webSocketClient, &WebSocketClient::gestureReceived, this, [this](const QString &gestureType, const QString &clientId, const QString &timestamp) {
+        qDebug() << "Gesture received in MainWindow:" << gestureType << "from client:" << clientId;
+        
+        if (gestureType == "NEXT_SLIDE") {
+            qDebug() << "Executing next slide command";
+            m_presentationManager->nextSlide();
+        }
+        else if (gestureType == "PREV_SLIDE") {
+            qDebug() << "Executing previous slide command";
+            m_presentationManager->previousSlide();
+        }
+        else if (gestureType == "ZOOM_IN") {
+            qDebug() << "Executing zoom in command";
+            m_presentationManager->zoomIn();
+        }
+        else if (gestureType == "ZOOM_OUT") {
+            qDebug() << "Executing zoom out command";
+            m_presentationManager->zoomOut();
+        }
+        else {
+            QJsonObject gestureData;
+            gestureData["gesture_type"] = gestureType;
+            gestureData["client_id"] = clientId;
+            gestureData["timestamp"] = timestamp;
+            handleGestureCommand(gestureData);
+        }
+    });
+
+    connect(m_webSocketClient, &WebSocketClient::pageNavigationReceived, this, [this](const QString &action, const QString &clientId, const QString &timestamp) {
+        qDebug() << "Page navigation received in MainWindow:" << action << "from client:" << clientId;
+        
+        if (action == "next") {
+            qDebug() << "Executing next slide command";
+            m_presentationManager->nextSlide();
+        } else if (action == "previous") {
+            qDebug() << "Executing previous slide command";
+            m_presentationManager->previousSlide();
+        }
+    });
+
+    // Connect UI buttons to actions
     if (ui->nextButton) {
         connect(ui->nextButton, &QPushButton::clicked, this, &MainWindow::on_nextButton_clicked);
     }
@@ -399,55 +439,7 @@ void MainWindow::setupConnections()
         connect(ui->zoomOutButton, &QPushButton::clicked, this, &MainWindow::on_zoomOutButton_clicked);
     }
 
-    // Connect approval and rejection buttons with null checks
-    if (ui->approveButton && ui->requestListWidget) {
-        connect(ui->approveButton, &QPushButton::clicked, [this]() {
-            QListWidgetItem *currentItem = ui->requestListWidget->currentItem();
-            if (currentItem) {
-                QString studentId = currentItem->data(Qt::UserRole).toString();
-                m_attendanceManager->grantSpeakPermission(studentId);
-            }
-        });
-    }
-
-    if (ui->rejectButton && ui->requestListWidget) {
-        connect(ui->rejectButton, &QPushButton::clicked, [this]() {
-            QListWidgetItem *currentItem = ui->requestListWidget->currentItem();
-            if (currentItem) {
-                QString studentId = currentItem->data(Qt::UserRole).toString();
-                // Just remove the raised hand flag, no need to revoke if not granted yet
-                Student student = m_attendanceManager->getStudent(studentId);
-                student.setRaisedHand(false);
-                m_attendanceManager->markAttendance(student);
-            }
-        });
-    }
-
-    //Fix action connections - uncomment if these actions are added to the UI
-    // if (ui->menuBar()->findChild<QAction*>("actionDashboard")) {
-    //     connect(ui->menuBar()->findChild<QAction*>("actionDashboard"), &QAction::triggered, [this]() {
-    //         if (ui->stackedWidget) {
-    //             ui->stackedWidget->setCurrentIndex(0);
-    //         }
-    //     });
-    // }
-
-    // if (ui->menuBar()->findChild<QAction*>("actionPresentation")) {
-    //     connect(ui->menuBar()->findChild<QAction*>("actionPresentation"), &QAction::triggered, [this]() {
-    //         if (ui->stackedWidget) {
-    //             ui->stackedWidget->setCurrentIndex(1);
-    //         }
-    //     });
-    // }
-
-    // if (ui->menuBar()->findChild<QAction*>("actionStudents")) {
-    //     connect(ui->menuBar()->findChild<QAction*>("actionStudents"), &QAction::triggered, [this]() {
-    //         if (ui->stackedWidget) {
-    //             ui->stackedWidget->setCurrentIndex(2);
-    //         }
-    //     });
-    // }
-
+    // Connect menu actions
     connect(ui->actionDashboard, &QAction::triggered, [this]() {
         ui->stackedWidget->setCurrentIndex(0);
     });
@@ -753,81 +745,72 @@ void MainWindow::handleServerMessage(const QString &message)
     QJsonObject jsonObj = doc.object();
     QString messageType = jsonObj["type"].toString();
 
-    if (messageType == "slide_command") {
-        handleSlideCommand(jsonObj);
-    } else if (messageType == "attendance") {
-        handleAttendanceMessage(jsonObj);
-    } else if (messageType == "gesture") {
-        handleGestureCommand(jsonObj);
-    } else if (messageType == "speak_request") {
-        handleSpeakRequest(jsonObj);
-    } else if (messageType == "room_joined")
-    {
-        /*
-            example message:
-            "{\"type\": \"room_joined\", \"room_id\": \"airclass-123\", \"client_id\": \"\", \"qr_code\": \"iVBORw0KGgoAAAANSUhEUgAAATYAAAE2AQAAAADDx4MEAAABeklEQVR4nO2aTW7DIBCFHxCpS3KDHiW5Wm8WDlTJ3mNNNYCbVB1F3iT4570VoE8CMnqe8ThOsESTX4QB5GyRs0XOFjlb5GyRs3VQLrkmYHQO6TzNC+dVnO9wXBRVriN3BVAW5LaS8x2Om5oX1Ckouo/WcL7DcvHBFe/c19bRuNO/lVFNEV+9ryf3nAsiMuggZlR/XERkPec7mD/Ge6poagtxG/fw+4rH5aGNFcQhBtnWPfxOOLSyNuZ5OoQ/06q89nv4vXFBDREE6bOEogRFBInvgz38IZLVGphT+VCc0pI6/dGl3nWIAtcyiQDp+sJ9Pbll/miuyGoSrYHpjz7xmKVZQ/ShVZJ6nTIeb6+v8DutSaRZg/mjV70r5WevrkCNQnl8MR59+7sq+dIvH1ftvPP7R+9+IlCLLJfO3yfZyj38fvu7J0hyIQvGD/YTu+cPmbNGeylk/uhbX91Kq6TWu6yv3s45/j/RFDlb5GyRs0XOFjlb5Gwtra9+AH0iJCEseopPAAAAAElFTkSuQmCC\"}"
+    qDebug() << "Processing message type:" << messageType;
 
-            parse it and show qr code image as decoded
-        */
+    if (messageType == "page_navigation") {
+        QString action = jsonObj["action"].toString();
+        qDebug() << "Page navigation action:" << action;
+        
+        if (action == "next") {
+            qDebug() << "Executing next slide command from WebSocket";
+            m_presentationManager->nextSlide();
+        } else if (action == "previous") {
+            qDebug() << "Executing previous slide command from WebSocket";
+            m_presentationManager->previousSlide();
+        }
+    } else if (messageType == "gesture") {
+        qDebug() << "Handling gesture message";
+        handleGestureCommand(jsonObj);
+    } else if (messageType == "room_joined") {
         QString qrCodeData = jsonObj["qr_code"].toString();
         if (!qrCodeData.isEmpty()) {
-            // Decode the base64 string
             QByteArray decodedData = QByteArray::fromBase64(qrCodeData.toUtf8());
             QPixmap pixmap;
             pixmap.loadFromData(decodedData);
 
-            // Show the QR code in a label or a dialog
             if (ui->qrCodePreviewLabel) {
                 ui->qrCodePreviewLabel->setPixmap(pixmap);
                 ui->qrCodePreviewLabel->show();
-            } else {
-                qWarning() << "QR Code label not found in UI";
             }
-        } else {
-            qWarning() << "QR Code data is empty";
         }
     }
-
-    else {
-        qWarning() << "Unknown message type:" << messageType;
-    }
-
-}
-
-void MainWindow::handleSlideCommand(const QJsonObject &data)
-{
-    QString command = data["command"].toString();
-
-    if (command == "next") {
-        m_presentationManager->nextSlide();
-    } else if (command == "previous") {
-        m_presentationManager->previousSlide();
-    } else if (command == "zoom_in") {
-        m_presentationManager->zoomIn();
-    } else if (command == "zoom_out") {
-        m_presentationManager->zoomOut();
-    }
-}
-
-void MainWindow::handleAttendanceMessage(const QJsonObject &data)
-{
-    QString studentId = data["studentId"].toString();
-    QString studentName = data["studentName"].toString();
-
-    Student student(studentId, studentName);
-    m_attendanceManager->markAttendance(student);
 }
 
 void MainWindow::handleGestureCommand(const QJsonObject &data)
 {
-    QString gesture = data["gesture"].toString();
-    m_gestureProcessor->onCommandDetected(gesture);
-}
-
-void MainWindow::handleSpeakRequest(const QJsonObject &data)
-{
-    QString studentId = data["studentId"].toString();
-    m_attendanceManager->raiseHand(studentId);
+    QString gestureType = data["gesture_type"].toString();
+    QString clientId = data["client_id"].toString();
+    
+    qDebug() << "Handling gesture:" << gestureType << "from client:" << clientId;
+    
+    if (gestureType == "HAND_RAISE") {
+        QMessageBox::information(this, "Hand Raise", 
+            QString("Student %1 raised their hand").arg(clientId));
+    }
+    else if (gestureType == "THUMB_UP") {
+        QMessageBox::information(this, "Thumb Up", 
+            QString("Student %1 gave a thumbs up").arg(clientId));
+    }
+    else if (gestureType == "THUMB_DOWN") {
+        QMessageBox::information(this, "Thumb Down", 
+            QString("Student %1 gave a thumbs down").arg(clientId));
+    }
+    else if (gestureType == "WAVE") {
+        QMessageBox::information(this, "Wave", 
+            QString("Student %1 waved").arg(clientId));
+    }
+    else if (gestureType == "NEXT_SLIDE") {
+        m_presentationManager->nextSlide();
+    }
+    else if (gestureType == "PREV_SLIDE") {
+        m_presentationManager->previousSlide();
+    }
+    else if (gestureType == "ZOOM_IN") {
+        m_presentationManager->zoomIn();
+    }
+    else if (gestureType == "ZOOM_OUT") {
+        m_presentationManager->zoomOut();
+    }
 }
 
 void MainWindow::on_actionOpen_triggered()

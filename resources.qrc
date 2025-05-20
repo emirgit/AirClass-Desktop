@@ -2,5 +2,6 @@
 <RCC version="1.0">
     <qresource>
         <file>icons/home.png</file>
+        <file>icons/timeout_gesture.png</file>
     </qresource>
 </RCC> 

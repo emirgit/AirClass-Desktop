@@ -18,6 +18,8 @@ public:
     explicit LoginDialog(QWidget *parent = nullptr);
     QString getEmail() const;
     QString getPassword() const;
+    bool isFullScreen() const;
+    void setFullScreen(bool fullScreen);
     void showEvent(QShowEvent *event) override;
 
 private slots:
@@ -28,14 +30,14 @@ private slots:
 
 private:
     QStackedWidget *stackedWidget{nullptr};
-    
+
     // Login page widgets
     QWidget *loginPage{nullptr};
     QLineEdit *emailEdit{nullptr};
     QLineEdit *passwordEdit{nullptr};
     QPushButton *loginButton{nullptr};
     QPushButton *toRegisterButton{nullptr};
-    
+
     // Register page widgets
     QWidget *registerPage{nullptr};
     QLineEdit *regEmailEdit{nullptr};
@@ -44,9 +46,11 @@ private:
     QPushButton *registerButton{nullptr};
     QPushButton *toLoginButton{nullptr};
 
+    bool m_isFullScreen;
+
     void setupLoginPage();
     void setupRegisterPage();
     bool validateEmail(const QString &email) const;
 };
 
-#endif // LOGINDIALOG_H 
+#endif // LOGINDIALOG_H

@@ -24,6 +24,8 @@ signals:
     void disconnected();
     void messageReceived(const QString &message);
     void error(const QString &errorMessage);
+    void gestureReceived(const QString &gestureType, const QString &clientId, const QString &timestamp);
+    void pageNavigationReceived(const QString &action, const QString &clientId, const QString &timestamp);
 
 private slots:
     void onConnected();

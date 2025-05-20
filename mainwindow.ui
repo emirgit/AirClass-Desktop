@@ -389,50 +389,50 @@
          <layout class="QVBoxLayout" name="qrCodeMainLayout">
           <item>
            <widget class="QGroupBox" name="qrPreviewGroupBox">
-            <property name="title">
+              <property name="title">
              <string>QR Code Preview</string>
-            </property>
+              </property>
             <layout class="QVBoxLayout" name="previewLayout">
-             <item>
+               <item>
               <spacer name="verticalSpacer">
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
-               </property>
+                 </property>
                <property name="sizeHint" stdset="0">
                 <size>
                  <width>20</width>
                  <height>40</height>
                 </size>
-               </property>
+                 </property>
               </spacer>
-             </item>
-             <item>
+               </item>
+               <item>
               <layout class="QHBoxLayout" name="horizontalLayout_5">
                <item>
                 <spacer name="horizontalSpacer_4">
-                 <property name="orientation">
+                <property name="orientation">
                   <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
                 <widget class="QLabel" name="qrCodePreviewLabel">
-                 <property name="minimumSize">
-                  <size>
+                <property name="minimumSize">
+                 <size>
                    <width>400</width>
                    <height>400</height>
-                  </size>
-                 </property>
+                 </size>
+                </property>
                  <property name="styleSheet">
                   <string>border: 1px solid #cccccc; background-color: white; padding: 20px; margin: 20px;</string>
                  </property>
-                 <property name="text">
+                <property name="text">
                   <string>QR Code will appear here</string>
                  </property>
                  <property name="alignment">
@@ -443,78 +443,78 @@
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_5">
+                <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
+              <spacer name="verticalSpacer_2">
+              <property name="orientation">
+                <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="shareGroupBox">
+              <property name="title">
+               <string>Share Options</string>
+              </property>
+              <layout class="QHBoxLayout" name="shareOptionsLayout">
+               <item>
+                <widget class="QPushButton" name="saveImageButton">
+                 <property name="text">
+                  <string>Save Image</string>
+                 </property>
+                 <property name="icon">
+                  <iconset theme="document-save"/>
                  </property>
                 </widget>
                </item>
                <item>
-                <spacer name="horizontalSpacer_5">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
+                <widget class="QPushButton" name="printButton">
+                 <property name="text">
+                  <string>Print</string>
                  </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
+                 <property name="icon">
+                  <iconset theme="document-print"/>
                  </property>
-                </spacer>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="displayFullScreenButton">
+                 <property name="text">
+                  <string>Full Screen</string>
+                 </property>
+                 <property name="icon">
+                  <iconset theme="view-fullscreen"/>
+                 </property>
+                </widget>
                </item>
               </layout>
-             </item>
-             <item>
-              <spacer name="verticalSpacer_2">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="shareGroupBox">
-            <property name="title">
-             <string>Share Options</string>
-            </property>
-            <layout class="QHBoxLayout" name="shareOptionsLayout">
-             <item>
-              <widget class="QPushButton" name="saveImageButton">
-               <property name="text">
-                <string>Save Image</string>
-               </property>
-               <property name="icon">
-                <iconset theme="document-save"/>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="printButton">
-               <property name="text">
-                <string>Print</string>
-               </property>
-               <property name="icon">
-                <iconset theme="document-print"/>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="displayFullScreenButton">
-               <property name="text">
-                <string>Full Screen</string>
-               </property>
-               <property name="icon">
-                <iconset theme="view-fullscreen"/>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
+             </widget>
           </item>
          </layout>
         </item>

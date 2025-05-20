@@ -6,6 +6,7 @@
 #include <QPdfView>
 #include <QString>
 #include <QRect>
+#include <QPointF>
 
 class PresentationManager : public QObject
 {
@@ -23,8 +24,8 @@ public:
 
     void zoomIn();
     void zoomOut();
+    void setZoomLevel(qreal zoomFactor, const QPointF &center = QPointF(-1, -1));
     void setZoomLevel(qreal zoomFactor);
-
     void highlight(const QRect &area);
     void clearHighlights();
 
