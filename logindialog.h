@@ -2,55 +2,61 @@
 #define LOGINDIALOG_H
 
 #include <QDialog>
+#include <QStackedWidget>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QLabel>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QStackedWidget>
-#include <QShowEvent>
+#include <QLabel>
+#include "restapiclient.h"
 
 class LoginDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit LoginDialog(QWidget *parent = nullptr);
-    QString getEmail() const;
-    QString getPassword() const;
-    bool isFullScreen() const;
+    explicit LoginDialog(RestApiClient* restApi, QWidget *parent = nullptr);
+    ~LoginDialog();
     void setFullScreen(bool fullScreen);
-    void showEvent(QShowEvent *event) override;
+
+signals:
+    void loginSuccessful(const QString &username, const QString &token);
+    void registerSuccessful(const QString &username, const QString &token);
 
 private slots:
-    void switchToRegister();
-    void switchToLogin();
-    void handleLogin();
-    void handleRegister();
+    void onLoginClicked();
+    void onRegisterClicked();
+    void onToRegisterClicked();
+    void onToLoginClicked();
+    void onLoginSuccess(const QJsonObject &data);
+    void onLoginFailed(const QString &message);
+    void onRegisterSuccess(const QJsonObject &data);
+    void onRegisterFailed(const QString &message);
+    void onError(const QString &message);
 
 private:
-    QStackedWidget *stackedWidget{nullptr};
-
-    // Login page widgets
-    QWidget *loginPage{nullptr};
-    QLineEdit *emailEdit{nullptr};
-    QLineEdit *passwordEdit{nullptr};
-    QPushButton *loginButton{nullptr};
-    QPushButton *toRegisterButton{nullptr};
-
-    // Register page widgets
-    QWidget *registerPage{nullptr};
-    QLineEdit *regEmailEdit{nullptr};
-    QLineEdit *regPasswordEdit{nullptr};
-    QLineEdit *confirmPasswordEdit{nullptr};
-    QPushButton *registerButton{nullptr};
-    QPushButton *toLoginButton{nullptr};
-
-    bool m_isFullScreen;
-
     void setupLoginPage();
     void setupRegisterPage();
-    bool validateEmail(const QString &email) const;
+    QString getLocalIpAddress();
+
+    QStackedWidget *stackedWidget;
+    QWidget *loginPage;
+    QWidget *registerPage;
+
+    QLineEdit *nameEdit;
+    QLineEdit *passwordEdit;
+    QPushButton *loginButton;
+    QPushButton *toRegisterButton;
+
+    QLineEdit *regNameEdit;
+    QLineEdit *regEmailEdit;
+    QLineEdit *regPasswordEdit;
+    QLineEdit *regConfirmPasswordEdit;
+    QPushButton *registerButton;
+    QPushButton *toLoginButton;
+
+    RestApiClient* m_restApi;
+    QString m_localIp;
+    bool m_isFullScreen;
 };
 
 #endif // LOGINDIALOG_H

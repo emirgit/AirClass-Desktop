@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "restapiclient.h"
 #include <QApplication>
 #include <QSplashScreen>
 #include <QTimer>
@@ -12,6 +13,10 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("AirClass");
     QCoreApplication::setApplicationName("AirClass Desktop");
     QCoreApplication::setApplicationVersion("1.0.0");
+
+    // Create and configure REST API client
+    RestApiClient* restApi = new RestApiClient(&app);
+    restApi->setBaseUrl("http://localhost:9090/api/v1"); // Adjust this URL according to your server
 
     // Dark mode temasını ayarla
     QApplication::setStyle("Fusion");
@@ -39,8 +44,8 @@ int main(int argc, char *argv[])
     splash.show();
     app.processEvents();
 
-    // Create main window
-    MainWindow mainWindow;
+    // Create main window with REST API client
+    MainWindow mainWindow(restApi);
 
     // Tam ekran modunu devre dışı bırak
     mainWindow.setWindowFlags(Qt::Window);

@@ -26,10 +26,12 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSpacerItem>
+#include <QtWidgets/QSpinBox>
 #include <QtWidgets/QStackedWidget>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
+#include "custompdfviewer.hpp"
 
 QT_BEGIN_NAMESPACE
 
@@ -109,6 +111,16 @@ public:
     QVBoxLayout *qrCodeLayout;
     QLabel *qrCodeLabel;
     QVBoxLayout *qrCodeMainLayout;
+    QGroupBox *timerGroupBox;
+    QHBoxLayout *timerLayout;
+    QLabel *timerDisplayLabel;
+    QHBoxLayout *timerControlsLayout;
+    QPushButton *timerStartButton;
+    QPushButton *timerStopButton;
+    QPushButton *timerResetButton;
+    QHBoxLayout *timerInputLayout;
+    QSpinBox *timerMinutesSpinBox;
+    QSpinBox *timerSecondsSpinBox;
     QGroupBox *qrPreviewGroupBox;
     QVBoxLayout *previewLayout;
     QSpacerItem *verticalSpacer;
@@ -127,6 +139,27 @@ public:
     QMenu *menuConnection;
     QMenu *menuView;
     QStatusBar *statusbar;
+
+    //notificationWidget
+    QWidget *notificationWidget = nullptr;
+    // generateAttendanceCodeButton
+    QPushButton *generateAttendanceCodeButton;
+    // refreshAttendanceButton
+    QPushButton *refreshAttendanceButton = nullptr;
+    // approveRequestButton 
+    QPushButton *approveRequestButton = nullptr;
+    // rejectRequestButton
+    QPushButton *rejectRequestButton = nullptr;
+    // closeSessionButton
+    QPushButton *closeSessionButton = nullptr;
+
+    
+    // speakRequestLabel
+    QLabel *speakRequestLabel;
+
+
+
+
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -324,7 +357,7 @@ public:
         presentationView->setObjectName("presentationView");
         presentationLayout = new QVBoxLayout(presentationView);
         presentationLayout->setObjectName("presentationLayout");
-        pdfView = new QPdfView(presentationView);
+    pdfView = new customPdfViewer(presentationView);
         pdfView->setObjectName("pdfView");
         pdfView->setMinimumSize(QSize(600, 400));
 
@@ -406,6 +439,12 @@ public:
 
         requestButtonsLayout->addWidget(rejectButton);
 
+        // Add close session button
+        closeSessionButton = new QPushButton(requestsGroupBox);
+        closeSessionButton->setObjectName("closeSessionButton");
+        closeSessionButton->setText("Close Session");
+        closeSessionButton->setStyleSheet("QPushButton { color: #e74c3c; font-weight: bold; background: transparent; border: 1px solid #e74c3c; border-radius: 6px; padding: 6px 16px; } QPushButton:hover { background: #fbeee6; }");
+        requestButtonsLayout->addWidget(closeSessionButton);
 
         verticalLayout_6->addLayout(requestButtonsLayout);
 
@@ -429,6 +468,67 @@ public:
 
         qrCodeMainLayout = new QVBoxLayout();
         qrCodeMainLayout->setObjectName("qrCodeMainLayout");
+        timerGroupBox = new QGroupBox(qrCodeView);
+        timerGroupBox->setObjectName("timerGroupBox");
+        timerLayout = new QHBoxLayout(timerGroupBox);
+        timerLayout->setObjectName("timerLayout");
+        timerDisplayLabel = new QLabel(timerGroupBox);
+        timerDisplayLabel->setObjectName("timerDisplayLabel");
+        QFont font1;
+        font1.setPointSize(28);
+        font1.setBold(true);
+        timerDisplayLabel->setFont(font1);
+        timerDisplayLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
+
+        timerLayout->addWidget(timerDisplayLabel);
+
+        timerControlsLayout = new QHBoxLayout();
+        timerControlsLayout->setObjectName("timerControlsLayout");
+        timerStartButton = new QPushButton(timerGroupBox);
+        timerStartButton->setObjectName("timerStartButton");
+        timerStartButton->setMinimumSize(QSize(50, 25));
+
+        timerControlsLayout->addWidget(timerStartButton);
+
+        timerStopButton = new QPushButton(timerGroupBox);
+        timerStopButton->setObjectName("timerStopButton");
+        timerStopButton->setMinimumSize(QSize(50, 25));
+
+        timerControlsLayout->addWidget(timerStopButton);
+
+        timerResetButton = new QPushButton(timerGroupBox);
+        timerResetButton->setObjectName("timerResetButton");
+        timerResetButton->setMinimumSize(QSize(50, 25));
+
+        timerControlsLayout->addWidget(timerResetButton);
+
+
+        timerLayout->addLayout(timerControlsLayout);
+
+        timerInputLayout = new QHBoxLayout();
+        timerInputLayout->setObjectName("timerInputLayout");
+        timerMinutesSpinBox = new QSpinBox(timerGroupBox);
+        timerMinutesSpinBox->setObjectName("timerMinutesSpinBox");
+        timerMinutesSpinBox->setMinimum(0);
+        timerMinutesSpinBox->setMaximum(59);
+        timerMinutesSpinBox->setMinimumSize(QSize(60, 25));
+
+        timerInputLayout->addWidget(timerMinutesSpinBox);
+
+        timerSecondsSpinBox = new QSpinBox(timerGroupBox);
+        timerSecondsSpinBox->setObjectName("timerSecondsSpinBox");
+        timerSecondsSpinBox->setMinimum(0);
+        timerSecondsSpinBox->setMaximum(59);
+        timerSecondsSpinBox->setMinimumSize(QSize(60, 25));
+
+        timerInputLayout->addWidget(timerSecondsSpinBox);
+
+
+        timerLayout->addLayout(timerInputLayout);
+
+
+        qrCodeMainLayout->addWidget(timerGroupBox);
+
         qrPreviewGroupBox = new QGroupBox(qrCodeView);
         qrPreviewGroupBox->setObjectName("qrPreviewGroupBox");
         previewLayout = new QVBoxLayout(qrPreviewGroupBox);
@@ -593,6 +693,93 @@ public:
         approveButton->setText(QCoreApplication::translate("MainWindow", "Approve", nullptr));
         rejectButton->setText(QCoreApplication::translate("MainWindow", "Reject", nullptr));
         qrCodeLabel->setText(QCoreApplication::translate("MainWindow", "QR Code Generator", nullptr));
+        timerGroupBox->setTitle(QString());
+        timerGroupBox->setStyleSheet(QCoreApplication::translate("MainWindow", "QGroupBox {\n"
+"                border: none;\n"
+"                margin-top: 0px;\n"
+"                font-weight: bold;\n"
+"                background-color: #1a1a1a;\n"
+"                border-radius: 10px;\n"
+"                padding: 10px;\n"
+"             }", nullptr));
+        timerDisplayLabel->setText(QCoreApplication::translate("MainWindow", "00:00", nullptr));
+        timerDisplayLabel->setStyleSheet(QCoreApplication::translate("MainWindow", "color: #ffffff; padding: 10px;", nullptr));
+        timerStartButton->setText(QCoreApplication::translate("MainWindow", "Start", nullptr));
+        timerStartButton->setStyleSheet(QCoreApplication::translate("MainWindow", "QPushButton {\n"
+"                    background-color: #00ff00;\n"
+"                    color: #000000;\n"
+"                    border: none;\n"
+"                    border-radius: 12px;\n"
+"                    padding: 3px 10px;\n"
+"                    font-weight: bold;\n"
+"                  }\n"
+"                  QPushButton:hover {\n"
+"                    background-color: #00cc00;\n"
+"                  }\n"
+"                  QPushButton:disabled {\n"
+"                    background-color: #666666;\n"
+"                    color: #999999;\n"
+"                  }", nullptr));
+        timerStopButton->setText(QCoreApplication::translate("MainWindow", "Stop", nullptr));
+        timerStopButton->setStyleSheet(QCoreApplication::translate("MainWindow", "QPushButton {\n"
+"                    background-color: #ff0000;\n"
+"                    color: #ffffff;\n"
+"                    border: none;\n"
+"                    border-radius: 12px;\n"
+"                    padding: 3px 10px;\n"
+"                    font-weight: bold;\n"
+"                  }\n"
+"                  QPushButton:hover {\n"
+"                    background-color: #cc0000;\n"
+"                  }\n"
+"                  QPushButton:disabled {\n"
+"                    background-color: #666666;\n"
+"                    color: #999999;\n"
+"                  }", nullptr));
+        timerResetButton->setText(QCoreApplication::translate("MainWindow", "Reset", nullptr));
+        timerResetButton->setStyleSheet(QCoreApplication::translate("MainWindow", "QPushButton {\n"
+"                    background-color: #ffff00;\n"
+"                    color: #000000;\n"
+"                    border: none;\n"
+"                    border-radius: 12px;\n"
+"                    padding: 3px 10px;\n"
+"                    font-weight: bold;\n"
+"                  }\n"
+"                  QPushButton:hover {\n"
+"                    background-color: #cccc00;\n"
+"                  }", nullptr));
+        timerMinutesSpinBox->setSuffix(QCoreApplication::translate("MainWindow", "m", nullptr));
+        timerMinutesSpinBox->setStyleSheet(QCoreApplication::translate("MainWindow", "QSpinBox {\n"
+"                    border: 1px solid #666666;\n"
+"                    border-radius: 8px;\n"
+"                    padding: 2px;\n"
+"                    background: #333333;\n"
+"                    color: #ffffff;\n"
+"                  }\n"
+"                  QSpinBox::up-button, QSpinBox::down-button {\n"
+"                    width: 15px;\n"
+"                    border: none;\n"
+"                    background: #444444;\n"
+"                  }\n"
+"                  QSpinBox::up-button:hover, QSpinBox::down-button:hover {\n"
+"                    background: #555555;\n"
+"                  }", nullptr));
+        timerSecondsSpinBox->setSuffix(QCoreApplication::translate("MainWindow", "s", nullptr));
+        timerSecondsSpinBox->setStyleSheet(QCoreApplication::translate("MainWindow", "QSpinBox {\n"
+"                    border: 1px solid #666666;\n"
+"                    border-radius: 8px;\n"
+"                    padding: 2px;\n"
+"                    background: #333333;\n"
+"                    color: #ffffff;\n"
+"                  }\n"
+"                  QSpinBox::up-button, QSpinBox::down-button {\n"
+"                    width: 15px;\n"
+"                    border: none;\n"
+"                    background: #444444;\n"
+"                  }\n"
+"                  QSpinBox::up-button:hover, QSpinBox::down-button:hover {\n"
+"                    background: #555555;\n"
+"                  }", nullptr));
         qrPreviewGroupBox->setTitle(QCoreApplication::translate("MainWindow", "QR Code Preview", nullptr));
         qrCodePreviewLabel->setStyleSheet(QCoreApplication::translate("MainWindow", "border: 1px solid #cccccc; background-color: white; padding: 20px; margin: 20px;", nullptr));
         qrCodePreviewLabel->setText(QCoreApplication::translate("MainWindow", "QR Code will appear here", nullptr));

@@ -17,7 +17,7 @@ public:
 
     bool loadPresentation(const QString &filePath);
     void setPdfView(QPdfView *view);
-
+    void safeUpdatePageIndicators();
     void nextSlide();
     void previousSlide();
     void goToSlide(int pageNumber);

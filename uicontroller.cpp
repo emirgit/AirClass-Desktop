@@ -9,9 +9,9 @@ void UIController::updateConnectionStatus(bool connected)
 {
     // Log connection status change
     if (connected) {
-        qDebug() << "Connected to server";
+        qDebug() << "Connected to server2";
     } else {
-        qDebug() << "Disconnected from server";
+        qDebug() << "Disconnected from server2";
     }
 }
 

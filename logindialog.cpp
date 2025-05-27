@@ -7,9 +7,17 @@
 #include <QApplication>
 #include <QScreen>
 #include <QTimer>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QNetworkInterface>
+#include <QTcpSocket>
+#include <QHostAddress>
+#include <QDebug>
+#include <QSettings>
 
-LoginDialog::LoginDialog(QWidget *parent)
+LoginDialog::LoginDialog(RestApiClient* restApi, QWidget *parent)
     : QDialog(parent)
+    , m_restApi(restApi)
 {
     setWindowTitle("AirClass - Welcome");
     // Set window flags to enable maximize button and window controls
@@ -26,6 +34,10 @@ LoginDialog::LoginDialog(QWidget *parent)
 
     // Store window state
     m_isFullScreen = false;
+
+    // Get local IP address
+    m_localIp = getLocalIpAddress();
+    qDebug() << "Local IP address:" << m_localIp;
 
     setStyleSheet(R"(
         QDialog {
@@ -92,6 +104,13 @@ LoginDialog::LoginDialog(QWidget *parent)
         }
     )");
 
+    // Connect to RestAPI signals
+    connect(m_restApi, &RestApiClient::loginSuccess, this, &LoginDialog::onLoginSuccess);
+    connect(m_restApi, &RestApiClient::loginFailed, this, &LoginDialog::onLoginFailed);
+    connect(m_restApi, &RestApiClient::registerSuccess, this, &LoginDialog::onRegisterSuccess);
+    connect(m_restApi, &RestApiClient::registerFailed, this, &LoginDialog::onRegisterFailed);
+    connect(m_restApi, &RestApiClient::error, this, &LoginDialog::onError);
+
     stackedWidget = new QStackedWidget(this);
     setupLoginPage();
     setupRegisterPage();
@@ -101,6 +120,25 @@ LoginDialog::LoginDialog(QWidget *parent)
     mainLayout->setSpacing(15);
     mainLayout->addWidget(stackedWidget);
     setLayout(mainLayout);
+}
+
+LoginDialog::~LoginDialog()
+{
+    // We don't own m_restApi, so don't delete it
+    if (m_restApi) {
+        disconnect(m_restApi, nullptr, this, nullptr);
+    }
+}
+
+QString LoginDialog::getLocalIpAddress()
+{
+    const QHostAddress &localhost = QHostAddress(QHostAddress::LocalHost);
+    for (const QHostAddress &address : QNetworkInterface::allAddresses()) {
+        if (address.protocol() == QAbstractSocket::IPv4Protocol && address != localhost) {
+            return address.toString();
+        }
+    }
+    return "127.0.0.1"; // Fallback to localhost
 }
 
 void LoginDialog::setupLoginPage()
@@ -127,14 +165,13 @@ void LoginDialog::setupLoginPage()
     subtitleLabel->setAlignment(Qt::AlignCenter);
     containerLayout->addWidget(subtitleLabel);
 
-    QLabel *emailLabel = new QLabel("School Email Address");
-    emailLabel->setObjectName("info");
-    containerLayout->addWidget(emailLabel);
+    QLabel *nameLabel = new QLabel("Email");
+    nameLabel->setObjectName("info");
+    containerLayout->addWidget(nameLabel);
 
-    emailEdit = new QLineEdit;
-    emailEdit->setPlaceholderText("Enter your school email (e.g., student@school.edu)");
-    emailEdit->setText("student@school.edu");
-    containerLayout->addWidget(emailEdit);
+    nameEdit = new QLineEdit;
+    nameEdit->setPlaceholderText("Enter your email");
+    containerLayout->addWidget(nameEdit);
 
     QLabel *passwordLabel = new QLabel("Password");
     passwordLabel->setObjectName("info");
@@ -143,7 +180,6 @@ void LoginDialog::setupLoginPage()
     passwordEdit = new QLineEdit;
     passwordEdit->setPlaceholderText("Enter your password");
     passwordEdit->setEchoMode(QLineEdit::Password);
-    passwordEdit->setText("123456");
     containerLayout->addWidget(passwordEdit);
 
     loginButton = new QPushButton("Sign In");
@@ -160,13 +196,12 @@ void LoginDialog::setupLoginPage()
     toRegisterButton->setMinimumHeight(45);
     containerLayout->addWidget(toRegisterButton);
 
-    layout->addWidget(container, 0, Qt::AlignCenter);
-    layout->addStretch();
-
-    connect(loginButton, &QPushButton::clicked, this, &LoginDialog::handleLogin);
-    connect(toRegisterButton, &QPushButton::clicked, this, &LoginDialog::switchToRegister);
-
+    layout->addWidget(container);
     stackedWidget->addWidget(loginPage);
+
+    // Connect signals
+    connect(loginButton, &QPushButton::clicked, this, &LoginDialog::onLoginClicked);
+    connect(toRegisterButton, &QPushButton::clicked, this, &LoginDialog::onToRegisterClicked);
 }
 
 void LoginDialog::setupRegisterPage()
@@ -183,22 +218,30 @@ void LoginDialog::setupRegisterPage()
     containerLayout->setAlignment(Qt::AlignCenter);
     container->setMaximumWidth(500);
 
-    QLabel *titleLabel = new QLabel("Create Your Account");
+    QLabel *titleLabel = new QLabel("Create Account");
     titleLabel->setObjectName("title");
     titleLabel->setAlignment(Qt::AlignCenter);
     containerLayout->addWidget(titleLabel);
 
-    QLabel *subtitleLabel = new QLabel("Join AirClass to get started");
+    QLabel *subtitleLabel = new QLabel("Join AirClass today");
     subtitleLabel->setObjectName("subtitle");
     subtitleLabel->setAlignment(Qt::AlignCenter);
     containerLayout->addWidget(subtitleLabel);
 
-    QLabel *emailLabel = new QLabel("School Email Address");
+    QLabel *nameLabel = new QLabel("Full Name");
+    nameLabel->setObjectName("info");
+    containerLayout->addWidget(nameLabel);
+
+    regNameEdit = new QLineEdit;
+    regNameEdit->setPlaceholderText("Enter your full name");
+    containerLayout->addWidget(regNameEdit);
+
+    QLabel *emailLabel = new QLabel("Email");
     emailLabel->setObjectName("info");
     containerLayout->addWidget(emailLabel);
 
     regEmailEdit = new QLineEdit;
-    regEmailEdit->setPlaceholderText("Enter your school email (e.g., student@school.edu)");
+    regEmailEdit->setPlaceholderText("Enter your email");
     containerLayout->addWidget(regEmailEdit);
 
     QLabel *passwordLabel = new QLabel("Password");
@@ -206,18 +249,18 @@ void LoginDialog::setupRegisterPage()
     containerLayout->addWidget(passwordLabel);
 
     regPasswordEdit = new QLineEdit;
-    regPasswordEdit->setPlaceholderText("Create a password (minimum 6 characters)");
+    regPasswordEdit->setPlaceholderText("Enter your password");
     regPasswordEdit->setEchoMode(QLineEdit::Password);
     containerLayout->addWidget(regPasswordEdit);
 
-    QLabel *confirmLabel = new QLabel("Confirm Password");
-    confirmLabel->setObjectName("info");
-    containerLayout->addWidget(confirmLabel);
+    QLabel *confirmPasswordLabel = new QLabel("Confirm Password");
+    confirmPasswordLabel->setObjectName("info");
+    containerLayout->addWidget(confirmPasswordLabel);
 
-    confirmPasswordEdit = new QLineEdit;
-    confirmPasswordEdit->setPlaceholderText("Re-enter your password");
-    confirmPasswordEdit->setEchoMode(QLineEdit::Password);
-    containerLayout->addWidget(confirmPasswordEdit);
+    regConfirmPasswordEdit = new QLineEdit;
+    regConfirmPasswordEdit->setPlaceholderText("Confirm your password");
+    regConfirmPasswordEdit->setEchoMode(QLineEdit::Password);
+    containerLayout->addWidget(regConfirmPasswordEdit);
 
     registerButton = new QPushButton("Create Account");
     registerButton->setMinimumHeight(45);
@@ -233,28 +276,17 @@ void LoginDialog::setupRegisterPage()
     toLoginButton->setMinimumHeight(45);
     containerLayout->addWidget(toLoginButton);
 
-    layout->addWidget(container, 0, Qt::AlignCenter);
-    layout->addStretch();
-
-    connect(registerButton, &QPushButton::clicked, this, &LoginDialog::handleRegister);
-    connect(toLoginButton, &QPushButton::clicked, this, &LoginDialog::switchToLogin);
-
+    layout->addWidget(container);
     stackedWidget->addWidget(registerPage);
+
+    // Connect signals
+    connect(registerButton, &QPushButton::clicked, this, &LoginDialog::onRegisterClicked);
+    connect(toLoginButton, &QPushButton::clicked, this, &LoginDialog::onToLoginClicked);
 }
 
-void LoginDialog::switchToRegister()
+void LoginDialog::onLoginClicked()
 {
-    stackedWidget->setCurrentWidget(registerPage);
-}
-
-void LoginDialog::switchToLogin()
-{
-    stackedWidget->setCurrentWidget(loginPage);
-}
-
-void LoginDialog::handleLogin()
-{
-    QString email = emailEdit->text().trimmed();
+    QString email = nameEdit->text().trimmed();
     QString password = passwordEdit->text();
 
     if (email.isEmpty() || password.isEmpty()) {
@@ -262,27 +294,18 @@ void LoginDialog::handleLogin()
         return;
     }
 
-    if (!validateEmail(email)) {
-        QMessageBox::warning(this, "Error", "Please enter a valid school email address");
-        return;
-    }
-
-    accept();
+    m_restApi->login(email, password);
 }
 
-void LoginDialog::handleRegister()
+void LoginDialog::onRegisterClicked()
 {
+    QString name = regNameEdit->text().trimmed();
     QString email = regEmailEdit->text().trimmed();
     QString password = regPasswordEdit->text();
-    QString confirmPassword = confirmPasswordEdit->text();
+    QString confirmPassword = regConfirmPasswordEdit->text();
 
-    if (email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+    if (name.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
         QMessageBox::warning(this, "Error", "Please fill in all fields");
-        return;
-    }
-
-    if (!validateEmail(email)) {
-        QMessageBox::warning(this, "Error", "Please enter a valid school email address");
         return;
     }
 
@@ -291,44 +314,65 @@ void LoginDialog::handleRegister()
         return;
     }
 
-    if (password.length() < 6) {
-        QMessageBox::warning(this, "Error", "Password must be at least 6 characters long");
-        return;
-    }
+    m_restApi->registerUser(name, email, password);
+}
 
+void LoginDialog::onToRegisterClicked()
+{
+    stackedWidget->setCurrentWidget(registerPage);
+}
+
+void LoginDialog::onToLoginClicked()
+{
+    stackedWidget->setCurrentWidget(loginPage);
+}
+
+void LoginDialog::onLoginSuccess(const QJsonObject &data)
+{
+    QString username = data["name"].toString();
+    QString token = data["token"].toString();
+    emit loginSuccessful(username, token);
     accept();
 }
 
-bool LoginDialog::validateEmail(const QString &email) const
+void LoginDialog::onLoginFailed(const QString &message)
 {
-    QRegularExpression regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
-    return regex.match(email).hasMatch();
+    QMessageBox::warning(this, "Login Failed", message);
 }
 
-QString LoginDialog::getEmail() const
+void LoginDialog::onRegisterSuccess(const QJsonObject &data)
 {
-    return stackedWidget->currentWidget() == loginPage ? emailEdit->text() : regEmailEdit->text();
+    QString name = data["name"].toString();
+    QMessageBox::information(this, "Registration Successful", 
+        QString("Welcome %1! Your account has been created successfully.\nPlease login with your credentials.").arg(name));
+    
+    // Clear the registration form
+    regNameEdit->clear();
+    regEmailEdit->clear();
+    regPasswordEdit->clear();
+    regConfirmPasswordEdit->clear();
+    
+    // Switch back to login view
+    stackedWidget->setCurrentWidget(loginPage);
+    
+    // Pre-fill the login email field with the registered email
+    nameEdit->setText(data["email"].toString());
 }
 
-QString LoginDialog::getPassword() const
+void LoginDialog::onRegisterFailed(const QString &message)
 {
-    return stackedWidget->currentWidget() == loginPage ? passwordEdit->text() : regPasswordEdit->text();
+    QMessageBox::warning(this, "Registration Failed", message);
 }
 
-void LoginDialog::showEvent(QShowEvent *event)
+void LoginDialog::onError(const QString &message)
 {
-    QDialog::showEvent(event);
-}
-
-bool LoginDialog::isFullScreen() const
-{
-    return m_isFullScreen;
+    QMessageBox::critical(this, "Error", message);
 }
 
 void LoginDialog::setFullScreen(bool fullScreen)
 {
     m_isFullScreen = fullScreen;
-    if (fullScreen) {
+    if (m_isFullScreen) {
         showFullScreen();
     } else {
         showNormal();

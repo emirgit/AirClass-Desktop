@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1024</width>
-    <height>768</height>
+    <height>834</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -111,6 +111,9 @@
          <layout class="QGridLayout" name="gridLayout">
           <item row="0" column="0">
            <widget class="QGroupBox" name="serverGroupBox">
+            <property name="visible">
+             <bool>false</bool>
+            </property>
             <property name="title">
              <string>Server Connection</string>
             </property>
@@ -192,6 +195,9 @@
           </item>
           <item row="1" column="0">
            <widget class="QGroupBox" name="classInfoGroupBox">
+            <property name="visible">
+             <bool>false</bool>
+            </property>
             <property name="title">
              <string>Class Information</string>
             </property>
@@ -245,7 +251,7 @@
       <widget class="QWidget" name="presentationView">
        <layout class="QVBoxLayout" name="presentationLayout">
         <item>
-         <widget class="QPdfView" name="pdfView">
+         <widget class="customPdfViewer" name="pdfView" native="true">
           <property name="minimumSize">
            <size>
             <width>600</width>
@@ -358,6 +364,16 @@
                  </property>
                 </widget>
                </item>
+               <item>
+                <widget class="QPushButton" name="closeSessionButton">
+                 <property name="styleSheet">
+                  <string>QPushButton { color: #e74c3c; font-weight: bold; background: transparent; border: 1px solid #e74c3c; border-radius: 6px; padding: 6px 16px; } QPushButton:hover { background: #fbeee6; }</string>
+                 </property>
+                 <property name="text">
+                  <string>Close Session</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </item>
             </layout>
@@ -388,133 +404,337 @@
         <item>
          <layout class="QVBoxLayout" name="qrCodeMainLayout">
           <item>
-           <widget class="QGroupBox" name="qrPreviewGroupBox">
-              <property name="title">
-             <string>QR Code Preview</string>
-              </property>
-            <layout class="QVBoxLayout" name="previewLayout">
+           <widget class="QGroupBox" name="timerGroupBox">
+            <property name="styleSheet">
+             <string>QGroupBox {
+                border: none;
+                margin-top: 0px;
+                font-weight: bold;
+                background-color: #1a1a1a;
+                border-radius: 10px;
+                padding: 10px;
+             }</string>
+            </property>
+            <property name="title">
+             <string/>
+            </property>
+            <layout class="QHBoxLayout" name="timerLayout">
+             <item>
+              <widget class="QLabel" name="timerDisplayLabel">
+               <property name="font">
+                <font>
+                 <pointsize>28</pointsize>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string>color: #ffffff; padding: 10px;</string>
+               </property>
+               <property name="text">
+                <string>00:00</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="timerControlsLayout">
                <item>
+                <widget class="QPushButton" name="timerStartButton">
+                 <property name="minimumSize">
+                  <size>
+                   <width>50</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string>QPushButton {
+                    background-color: #00ff00;
+                    color: #000000;
+                    border: none;
+                    border-radius: 12px;
+                    padding: 3px 10px;
+                    font-weight: bold;
+                  }
+                  QPushButton:hover {
+                    background-color: #00cc00;
+                  }
+                  QPushButton:disabled {
+                    background-color: #666666;
+                    color: #999999;
+                  }</string>
+                 </property>
+                 <property name="text">
+                  <string>Start</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="timerStopButton">
+                 <property name="minimumSize">
+                  <size>
+                   <width>50</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string>QPushButton {
+                    background-color: #ff0000;
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 12px;
+                    padding: 3px 10px;
+                    font-weight: bold;
+                  }
+                  QPushButton:hover {
+                    background-color: #cc0000;
+                  }
+                  QPushButton:disabled {
+                    background-color: #666666;
+                    color: #999999;
+                  }</string>
+                 </property>
+                 <property name="text">
+                  <string>Stop</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="timerResetButton">
+                 <property name="minimumSize">
+                  <size>
+                   <width>50</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string>QPushButton {
+                    background-color: #ffff00;
+                    color: #000000;
+                    border: none;
+                    border-radius: 12px;
+                    padding: 3px 10px;
+                    font-weight: bold;
+                  }
+                  QPushButton:hover {
+                    background-color: #cccc00;
+                  }</string>
+                 </property>
+                 <property name="text">
+                  <string>Reset</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="timerInputLayout">
+               <item>
+                <widget class="QSpinBox" name="timerMinutesSpinBox">
+                 <property name="minimumSize">
+                  <size>
+                   <width>60</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string>QSpinBox {
+                    border: 1px solid #666666;
+                    border-radius: 8px;
+                    padding: 2px;
+                    background: #333333;
+                    color: #ffffff;
+                  }
+                  QSpinBox::up-button, QSpinBox::down-button {
+                    width: 15px;
+                    border: none;
+                    background: #444444;
+                  }
+                  QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+                    background: #555555;
+                  }</string>
+                 </property>
+                 <property name="suffix">
+                  <string>m</string>
+                 </property>
+                 <property name="minimum">
+                  <number>0</number>
+                 </property>
+                 <property name="maximum">
+                  <number>59</number>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="timerSecondsSpinBox">
+                 <property name="minimumSize">
+                  <size>
+                   <width>60</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string>QSpinBox {
+                    border: 1px solid #666666;
+                    border-radius: 8px;
+                    padding: 2px;
+                    background: #333333;
+                    color: #ffffff;
+                  }
+                  QSpinBox::up-button, QSpinBox::down-button {
+                    width: 15px;
+                    border: none;
+                    background: #444444;
+                  }
+                  QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+                    background: #555555;
+                  }</string>
+                 </property>
+                 <property name="suffix">
+                  <string>s</string>
+                 </property>
+                 <property name="minimum">
+                  <number>0</number>
+                 </property>
+                 <property name="maximum">
+                  <number>59</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="qrPreviewGroupBox">
+            <property name="title">
+             <string>QR Code Preview</string>
+            </property>
+            <layout class="QVBoxLayout" name="previewLayout">
+             <item>
               <spacer name="verticalSpacer">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
-                 </property>
+                <enum>Qt::Orientation::Vertical</enum>
+               </property>
                <property name="sizeHint" stdset="0">
                 <size>
                  <width>20</width>
                  <height>40</height>
                 </size>
-                 </property>
+               </property>
               </spacer>
-               </item>
-               <item>
+             </item>
+             <item>
               <layout class="QHBoxLayout" name="horizontalLayout_5">
                <item>
                 <spacer name="horizontalSpacer_4">
-                <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
                 <widget class="QLabel" name="qrCodePreviewLabel">
-                <property name="minimumSize">
-                 <size>
-                   <width>400</width>
-                   <height>400</height>
-                 </size>
-                </property>
-                 <property name="styleSheet">
-                  <string>border: 1px solid #cccccc; background-color: white; padding: 20px; margin: 20px;</string>
-                 </property>
-                <property name="text">
-                  <string>QR Code will appear here</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignmentFlag::AlignCenter</set>
-                 </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_5">
-                <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </item>
-            <item>
-              <spacer name="verticalSpacer_2">
-              <property name="orientation">
-                <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QGroupBox" name="shareGroupBox">
-              <property name="title">
-               <string>Share Options</string>
-              </property>
-              <layout class="QHBoxLayout" name="shareOptionsLayout">
-               <item>
-                <widget class="QPushButton" name="saveImageButton">
-                 <property name="text">
-                  <string>Save Image</string>
                  </property>
-                 <property name="icon">
-                  <iconset theme="document-save"/>
+                 <property name="minimumSize">
+                  <size>
+                   <width>400</width>
+                   <height>400</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string>border: 1px solid #cccccc; background-color: white; padding: 20px; margin: 20px;</string>
+                 </property>
+                 <property name="text">
+                  <string>QR Code will appear here</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="printButton">
-                 <property name="text">
-                  <string>Print</string>
+                <spacer name="horizontalSpacer_5">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
                  </property>
-                 <property name="icon">
-                  <iconset theme="document-print"/>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
                  </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="displayFullScreenButton">
-                 <property name="text">
-                  <string>Full Screen</string>
-                 </property>
-                 <property name="icon">
-                  <iconset theme="view-fullscreen"/>
-                 </property>
-                </widget>
+                </spacer>
                </item>
               </layout>
-             </widget>
+             </item>
+             <item>
+              <spacer name="verticalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Orientation::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="shareGroupBox">
+            <property name="title">
+             <string>Share Options</string>
+            </property>
+            <layout class="QHBoxLayout" name="shareOptionsLayout">
+             <item>
+              <widget class="QPushButton" name="saveImageButton">
+               <property name="text">
+                <string>Save Image</string>
+               </property>
+               <property name="icon">
+                <iconset theme="document-save"/>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="printButton">
+               <property name="text">
+                <string>Print</string>
+               </property>
+               <property name="icon">
+                <iconset theme="document-print"/>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="displayFullScreenButton">
+               <property name="text">
+                <string>Full Screen</string>
+               </property>
+               <property name="icon">
+                <iconset theme="view-fullscreen"/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </item>
          </layout>
         </item>
@@ -530,7 +750,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>36</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -611,9 +831,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QPdfView</class>
-   <extends>QGraphicsView</extends>
-   <header>QPdfView</header>
+   <class>customPdfViewer</class>
+   <extends>QWidget</extends>
+   <header>custompdfviewer.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
@@ -695,22 +915,6 @@
     <hint type="destinationlabel">
      <x>511</x>
      <y>383</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>customRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>customContentTextEdit</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>191</x>
-     <y>187</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>191</x>
-     <y>237</y>
     </hint>
    </hints>
   </connection>
