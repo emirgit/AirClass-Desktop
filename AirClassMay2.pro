@@ -1,4 +1,5 @@
-QT       += core gui printsupport widgets pdf pdfwidgets websockets network
+QT       += core gui printsupport widgets pdf pdfwidgets websockets network multimedia
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 # Add websockets module with version check
@@ -10,9 +11,14 @@ INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtCore
 INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtGui
 INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtWidgets
 INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtWebSockets
-DEPENDPATH += $$[QT_INSTALL_HEADERS]/QtWebSockets
+INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtNetwork
+INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtMultimedia
 
-CONFIG += c++17 c++11
+DEPENDPATH += $$[QT_INSTALL_HEADERS]/QtWebSockets
+DEPENDPATH += $$[QT_INSTALL_HEADERS]/QtNetwork
+DEPENDPATH += $$[QT_INSTALL_HEADERS]/QtMultimedia
+
+CONFIG += c++17
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -20,38 +26,53 @@ CONFIG += c++17 c++11
 
 SOURCES += \
     attendancemanager.cpp \
+    custompdfviewer.cpp \
     gestureprocessor.cpp \
+    logindialog.cpp \
     main.cpp \
     mainwindow.cpp \
     presentationmanager.cpp \
+    sessiondialog.cpp \
     student.cpp \
+    testdata.cpp \
     uicontroller.cpp \
     websocketclient.cpp \
-    logindialog.cpp
+    restapiclient.cpp \
+    drawinglayer.cpp
+
 
 HEADERS += \
     attendancemanager.h \
+    custompdfviewer.hpp \
     gestureprocessor.h \
+    logindialog.h \
     mainwindow.h \
     presentationmanager.h \
+    sessiondialog.h \
     student.h \
+    testdata.h \
     ui_mainwindow.h \
     uicontroller.h \
     websocketclient.h \
-    logindialog.h
+    restapiclient.h \
+    drawinglayer.h
+
 
 FORMS += \
     mainwindow.ui
 
-
-TRANSLATIONS += \
+# Translation files
+TRANSLATIONS = \
     AirClassMay2_en_US.ts \
     AirClassMay2_tr_TR.ts
 
-CONFIG += lrelease
-CONFIG += embed_translations
+# Translation configuration
+CONFIG += lrelease embed_translations
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    resources.qrc
